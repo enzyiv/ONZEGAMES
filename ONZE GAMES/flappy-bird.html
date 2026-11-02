@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Meu Site</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <a href="index.html" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-amber-600 font-medium text-sm">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
+            </a>
+            <div class="flex items-center space-x-3">
+                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
+                </button>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Flappy Bird</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 w-full text-center">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-lg">
+                    <i class="fa-solid fa-feather"></i> Flappy Bird
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    Pontos: <span id="score">0</span>
+                </div>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">Pressione a **Barra de Espaço** ou clique na tela para fazer o passarinho voar!</p>
+            
+            <div class="relative w-full flex justify-center bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
+                <canvas id="gameCanvas" width="360" height="480" class="bg-sky-300 rounded-xl max-w-full h-auto shadow-md cursor-pointer"></canvas>
+                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white">
+                    <h2 class="text-2xl font-bold mb-2">Flappy Bird</h2>
+                    <p class="text-sm text-gray-300 mb-6">Desvie dos canos e bata recordes!</p>
+                    <button id="startBtn" class="px-6 py-3 bg-amber-600 hover:bg-amber-700 font-medium rounded-xl shadow-lg transition-all">Iniciar Jogo</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+        if (htmlElement.classList.contains('dark')) themeIcon.classList.replace('fa-sun', 'fa-moon');
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+            themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const overlay = document.getElementById('gameOverlay');
+        const startBtn = document.getElementById('startBtn');
+
+        let score = 0, isPlaying = false, animId;
+        let bird = { x: 50, y: 200, radius: 12, gravity: 0.6, lift: -7, velocity: 0 };
+        let pipes = [];
+
+        function startGame() {
+            score = 0; scoreEl.textContent = score;
+            bird.y = 200; bird.velocity = 0;
+            pipes = [{ x: 360, top: 120, bottom: 120 }];
+            overlay.classList.add('hidden');
+            isPlaying = true;
+            loop();
+        }
+
+        function jump() {
+            if (isPlaying) bird.velocity = bird.lift;
+        }
+
+        function loop() {
+            if (!isPlaying) return;
+            ctx.fillStyle = '#7DD3FC'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Física passarinho
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Canos
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 180) {
+                let topH = Math.floor(Math.random() * 150) + 50;
+                pipes.push({ x: canvas.width, top: topH, bottom: 130 });
+            }
+
+            pipes.forEach((p, index) => {
+                p.x -= 2.5;
+                ctx.fillStyle = '#22C55E';
+                // Cano Superior
+                ctx.fillRect(p.x, 0, 50, p.top);
+                // Cano Inferior
+                ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
+
+                // Pontuação
+                if (p.x + 50 === bird.x) { score += 1; scoreEl.textContent = score; }
+
+                // Colisão
+                if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + 50) {
+                    if (bird.y - bird.radius < p.top || bird.y + bird.radius > canvas.height - p.bottom) {
+                        gameOver();
+                    }
+                }
+
+                if (p.x < -50) pipes.splice(index, 1);
+            });
+
+            // Chão ou Teto
+            if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) gameOver();
+
+            // Desenhar Passarinho
+            ctx.fillStyle = '#FACC15';
+            ctx.beginPath(); ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2); ctx.fill();
+
+            animId = requestAnimationFrame(loop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(animId);
+            overlay.querySelector('h2').textContent = "Game Over!";
+            overlay.querySelector('p').textContent = `Pontuação: ${score}`;
+            startBtn.textContent = "Jogar Novamente";
+            overlay.classList.remove('hidden');
+        }
+
+        window.addEventListener('keydown', e => { if (e.code === 'Space') jump(); });
+        canvas.addEventListener('click', jump);
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

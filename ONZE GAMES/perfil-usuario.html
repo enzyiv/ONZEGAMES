@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Meu Site</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <!-- Script preventivo para aplicar o tema antes de carregar a página -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <!-- FontAwesome para os ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="index.html" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
+                </a>
+                <div class="flex items-center space-x-3">
+                    <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Alternar Tema">
+                        <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
+                    </button>
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Meu Perfil</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8 border border-gray-100 dark:border-gray-700 text-center transition-colors duration-200">
+            
+            <div class="mb-6 relative inline-block">
+                <input type="file" id="inputFoto" accept=".png, .jpg, .jpeg" class="hidden">
+                
+                <div id="btnMudarFoto" class="w-28 h-28 rounded-full bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center cursor-pointer overflow-hidden border-4 border-white dark:border-gray-700 shadow-md hover:opacity-95 transition-all relative group" title="Clique para alterar a foto">
+                    <i id="iconePadrao" class="fa-solid fa-user text-4xl"></i>
+                    <img id="fotoPreview" class="w-full h-full object-cover hidden" alt="Foto de Perfil">
+                    
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium">
+                        <i class="fa-solid fa-camera mr-1"></i> Alterar
+                    </div>
+                </div>
+            </div>
+
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1" id="nomeUsuario">Visitante</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Membro da Comunidade</p>
+
+            <div class="mb-6 text-left">
+                <label for="inputNovoNome" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Atualizar seu nome de usuário:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="inputNovoNome" placeholder="Digite seu nome" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:border-indigo-500">
+                    <button id="btnSalvarNome" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors">Salvar</button>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-gray-700 pt-6 space-y-4 text-left">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-shield-halved mr-2 text-indigo-500"></i> Status da Conta</span>
+                    <span class="font-medium text-green-600 bg-green-50 dark:bg-green-900/40 dark:text-green-400 px-2.5 py-1 rounded-full text-xs">Ativa</span>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <a href="perfil.html" class="inline-block w-full py-2.5 px-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-xl text-sm transition-colors">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Trocar de Conta / Sair
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const htmlElement = document.documentElement;
+
+            // Sincroniza o ícone corretamente ao carregar a página com base no tema atual
+            if (htmlElement.classList.contains('dark')) {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            } else {
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+            }
+
+            // Alternar Tema ao clicar no botão
+            themeToggleBtn.addEventListener('click', () => {
+                if (htmlElement.classList.contains('dark')) {
+                    htmlElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    htmlElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            });
+
+            // Sincroniza o tema em tempo real caso mude em outra aba
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'theme') {
+                    if (event.newValue === 'dark') {
+                        htmlElement.classList.add('dark');
+                        if (themeIcon) themeIcon.classList.replace('fa-sun', 'fa-moon');
+                    } else {
+                        htmlElement.classList.remove('dark');
+                        if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+                    }
+                }
+            });
+
+            // Funções de Perfil (Nome e Foto)
+            const nomeUsuarioElement = document.getElementById('nomeUsuario');
+            const inputNovoNome = document.getElementById('inputNovoNome');
+            const btnSalvarNome = document.getElementById('btnSalvarNome');
+            
+            const btnMudarFoto = document.getElementById('btnMudarFoto');
+            const inputFoto = document.getElementById('inputFoto');
+            const fotoPreview = document.getElementById('fotoPreview');
+            const iconePadrao = document.getElementById('iconePadrao');
+
+            const nomeSalvo = localStorage.getItem('usuarioNome');
+            if (nomeSalvo && nomeSalvo.trim() !== "") {
+                nomeUsuarioElement.textContent = nomeSalvo;
+                inputNovoNome.value = nomeSalvo;
+            }
+
+            btnSalvarNome.addEventListener('click', () => {
+                const novoNome = inputNovoNome.value.trim();
+                if (novoNome) {
+                    localStorage.setItem('usuarioNome', novoNome);
+                    nomeUsuarioElement.textContent = novoNome;
+                    alert('Nome atualizado com sucesso!');
+                } else {
+                    alert('Por favor, digite um nome válido.');
+                }
+            });
+
+            const fotoSalva = localStorage.getItem('usuarioFoto');
+            if (fotoSalva) {
+                fotoPreview.src = fotoSalva;
+                fotoPreview.classList.remove('hidden');
+                iconePadrao.classList.add('hidden');
+            }
+
+            if (btnMudarFoto && inputFoto) {
+                btnMudarFoto.addEventListener('click', () => {
+                    inputFoto.click();
+                });
+            }
+
+            if (inputFoto) {
+                inputFoto.addEventListener('change', (event) => {
+                    const arquivo = event.target.files[0];
+                    if (arquivo) {
+                        const tipoValido = ['image/jpeg', 'image/png'].includes(arquivo.type);
+                        if (!tipoValido) {
+                            alert('Por favor, selecione apenas arquivos nos formatos .png ou .jpg!');
+                            return;
+                        }
+
+                        const leitor = new FileReader();
+                        leitor.onload = function(e) {
+                            const base64Imagem = e.target.result;
+                            fotoPreview.src = base64Imagem;
+                            fotoPreview.classList.remove('hidden');
+                            iconePadrao.classList.add('hidden');
+                            localStorage.setItem('usuarioFoto', base64Imagem);
+                        }
+                        leitor.readAsDataURL(arquivo);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
