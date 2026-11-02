@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders - Fases Avançadas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 min-h-screen flex flex-col font-sans overflow-hidden select-none">
+
+    <!-- Barra Superior -->
+    <header class="bg-gray-900/85 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <a href="index.html" class="flex items-center text-gray-300 hover:text-indigo-400 transition-colors font-medium text-sm">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
+            </a>
+            <div class="flex items-center space-x-3">
+                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-300 hover:bg-gray-800 transition-colors">
+                    <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
+                </button>
+                <span class="text-sm font-semibold text-gray-200">Space Invaders</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Área do Jogo em Tela Cheia -->
+    <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 relative">
+        
+        <!-- Placar Flutuante -->
+        <div class="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-6 py-2.5 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-8 text-white">
+            <div class="flex items-center gap-2 font-bold text-indigo-400">
+                <i class="fa-solid fa-rocket"></i> Space Invaders
+            </div>
+            <div class="text-sm font-semibold text-gray-300">
+                Level: <span id="level" class="text-yellow-400 font-bold text-base">1</span>
+            </div>
+            <div class="text-sm font-semibold text-gray-300">
+                Pontos: <span id="score" class="text-indigo-400 font-bold text-base">0</span>
+            </div>
+            <div class="text-sm font-semibold text-gray-300">
+                Vidas: <span id="lives" class="text-red-400 font-bold text-base">3</span>
+            </div>
+        </div>
+
+        <!-- Canvas em Tela Cheia -->
+        <div class="relative w-full h-full flex items-center justify-center pt-10">
+            <canvas id="gameCanvas" width="600" height="500" class="bg-black rounded-2xl shadow-2xl border border-gray-800 max-w-full max-h-[82vh] object-contain"></canvas>
+            
+            <!-- Overlay de Início / Game Over -->
+            <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-20">
+                <h2 id="overlayTitle" class="text-3xl font-extrabold mb-3 tracking-wide">Space Invaders</h2>
+                <p id="overlayText" class="text-sm text-gray-300 mb-8 max-w-sm text-center">Sobreviva aos novos tipos de inimigos em cada fase!</p>
+                <button id="startBtn" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 font-semibold rounded-xl shadow-xl transition-all transform hover:scale-105">
+                    Iniciar Jogo
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+        if (htmlElement.classList.contains('dark')) themeIcon.classList.replace('fa-sun', 'fa-moon');
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+            themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const levelEl = document.getElementById('level');
+        const overlay = document.getElementById('gameOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+        const startBtn = document.getElementById('startBtn');
+
+        let score = 0, lives = 3, level = 1, isPlaying = false, animationId;
+        const pixelSize = 3;
+
+        // Pixel Arts para os 4 Tipos de Inimigos
+        const alienArt1 = [ // Verde (Level 1+)
+            [0,0,1,0,0,0,0,1,0,0],
+            [0,0,0,1,0,0,1,0,0,0],
+            [0,0,1,1,1,1,1,1,0,0],
+            [0,1,1,0,1,1,0,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,1,1,1,1,1,1,0,1]
+        ];
+
+        const alienArt2 = [ // Roxo (Level 2+) - Atiram
+            [0,0,0,1,1,1,0,0,0],
+            [0,0,1,1,1,1,1,0,0],
+            [0,1,0,1,1,1,0,1,0],
+            [1,1,1,1,1,1,1,1,1],
+            [1,0,1,0,0,0,1,0,1]
+        ];
+
+        const alienArt3 = [ // Laranja (Level 3+) - Atiram
+            [0,1,1,1,1,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1],
+            [1,0,1,1,1,1,1,0,1],
+            [1,1,1,0,0,0,1,1,1],
+            [0,1,0,1,1,1,0,1,0]
+        ];
+
+        const alienArt4 = [ // Amarelo (Level 4+) - Tanque Supremo
+            [1,1,0,0,1,1,0,0,1,1],
+            [0,1,1,1,1,1,1,1,1,0],
+            [0,0,1,1,1,1,1,1,0,0],
+            [0,1,1,0,0,0,0,1,1,0],
+            [1,1,0,0,0,0,0,0,1,1]
+        ];
+
+        const playerArt = [
+            [0,0,0,0,0,1,0,0,0,0,0],
+            [0,0,0,0,1,1,1,0,0,0,0],
+            [0,0,0,0,1,1,1,0,0,0,0],
+            [0,1,1,1,1,1,1,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        function drawPixelArt(matrix, startX, startY, color) {
+            ctx.fillStyle = color;
+            matrix.forEach((row, r) => {
+                row.forEach((pixel, c) => {
+                    if (pixel) {
+                        ctx.fillRect(startX + c * pixelSize, startY + r * pixelSize, pixelSize, pixelSize);
+                    }
+                });
+            });
+        }
+
+        let player = { 
+            x: canvas.width / 2 - 16, 
+            y: canvas.height - 50, 
+            width: 11 * pixelSize, 
+            height: 6 * pixelSize, 
+            dx: 0, 
+            dy: 0 
+        };
+        let bullets = [], enemyBullets = [], aliens = [];
+        let notificationText = "";
+        let notificationTimer = 0;
+
+        function criarOndaAlienigena() {
+            aliens = [];
+            let rows = 3 + Math.min(level, 2);
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < 8; c++) {
+                    let tipo = 1;
+                    let cor = '#22C55E';
+                    let hp = 1;
+
+                    // Distribuição progressiva de acordo com o Level
+                    if (level === 2) {
+                        tipo = r === 0 ? 2 : 1; // Verde e Roxo
+                        cor = tipo === 2 ? '#A855F7' : '#22C55E';
+                    } else if (level === 3) {
+                        tipo = r === 0 ? 3 : (r === 1 ? 2 : 1); // Verde, Roxo e Laranja
+                        cor = tipo === 3 ? '#F97316' : (tipo === 2 ? '#A855F7' : '#22C55E');
+                    } else if (level >= 4) {
+                        let tiposDisponiveis = [1, 2, 3, 4];
+                        tipo = tiposDisponiveis[r % tiposDisponiveis.length];
+                        if (tipo === 1) cor = '#22C55E';
+                        if (tipo === 2) cor = '#A855F7';
+                        if (tipo === 3) cor = '#F97316';
+                        if (tipo === 4) cor = '#EAB308';
+                    }
+
+                    if (tipo === 4) hp = 2; // Amarelo é mais resistente
+
+                    aliens.push({
+                        x: 60 + c * 58,
+                        y: 40 + r * 38,
+                        width: 9 * pixelSize,
+                        height: 6 * pixelSize,
+                        tipo: tipo,
+                        color: cor,
+                        hp: hp,
+                        alive: true,
+                        // Propriedades para movimentação individual única
+                        speedX: (Math.random() * 1.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1),
+                        speedY: Math.random() * 0.2 + 0.1,
+                        angle: Math.random() * Math.PI,
+                        // Comportamento: se o tipo está atirando ou avançando kamikaze
+                        isShootingGroup: (level === 2 && tipo === 2) || (level === 3 && tipo === 3) || (level >= 4 && tipo >= 3)
+                    });
+                }
+            }
+
+            notificationText = `LEVEL ${level}`;
+            notificationTimer = 90;
+        }
+
+        function startGame() {
+            score = 0; lives = 3; level = 1;
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+            levelEl.textContent = level;
+            bullets = []; enemyBullets = [];
+            player.x = canvas.width / 2 - 16;
+            player.y = canvas.height - 50;
+            criarOndaAlienigena();
+            overlay.classList.add('hidden');
+            isPlaying = true;
+            loop();
+        }
+
+        function gameOver(won) {
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            overlayTitle.textContent = won ? "Parabéns! Vitória Absoluta!" : "Game Over!";
+            overlayText.textContent = `Pontuação final: ${score} | Nível: ${level}`;
+            startBtn.textContent = "Jogar Novamente";
+            overlay.classList.remove('hidden');
+        }
+
+        function loop() {
+            if (!isPlaying) return;
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Movimentação do Player
+            player.x += player.dx;
+            player.y += player.dy;
+
+            if (player.x < 10) player.x = 10;
+            if (player.x + player.width > canvas.width - 10) player.x = canvas.width - 10;
+            if (player.y < canvas.height * 0.65) player.y = canvas.height * 0.65;
+            if (player.y + player.height > canvas.height - 10) player.y = canvas.height - 10;
+
+            drawPixelArt(playerArt, player.x, player.y, '#3B82F6');
+
+            // Balas do Jogador
+            bullets.forEach((b, index) => {
+                b.y -= 7;
+                ctx.fillStyle = '#F59E0B';
+                ctx.fillRect(b.x, b.y, 3, 10);
+                if (b.y < 0) bullets.splice(index, 1);
+            });
+
+            // Balas Inimigas
+            enemyBullets.forEach((eb, index) => {
+                eb.y += 4.5;
+                ctx.fillStyle = '#EC4899';
+                ctx.fillRect(eb.x, eb.y, 3, 8);
+
+                if (eb.x > player.x && eb.x < player.x + player.width && eb.y > player.y && eb.y < player.y + player.height) {
+                    enemyBullets.splice(index, 1);
+                    lives--;
+                    livesEl.textContent = lives;
+                    if (lives <= 0) gameOver(false);
+                }
+                if (eb.y > canvas.height) enemyBullets.splice(index, 1);
+            });
+
+            let aliveCount = 0;
+
+            // Movimentação Individual e Comportamento dos Inimigos
+            aliens.forEach(a => {
+                if (!a.alive) return;
+                aliveCount++;
+
+                // Cada inimigo se move de forma única (independente)
+                a.angle += 0.03;
+                a.x += a.speedX + Math.sin(a.angle) * 0.5; // Movimento oscilatório individual
+                a.y += a.speedY + (level * 0.04);          // Descida gradual
+
+                // Rebater nas paredes laterais individualmente
+                if (a.x <= 10 || a.x + a.width >= canvas.width - 10) {
+                    a.speedX *= -1;
+                }
+
+                // Regra de Comportamento: Se o tipo está atirando, mantém distância disparando. Senão, vem em voo Kamikaze!
+                if (a.isShootingGroup) {
+                    // Atiram contra a nave
+                    if (Math.random() < 0.003) {
+                        enemyBullets.push({ x: a.x + a.width / 2, y: a.y + a.height });
+                    }
+                } else {
+                    // Variação não-atiradora vem voando direto (Kamikaze) em direção ao player
+                    let dx = player.x - a.x;
+                    if (Math.abs(dx) > 2) {
+                        a.x += Math.sign(dx) * 0.8; // Persegue sutilmente o player horizontalmente
+                    }
+                }
+
+                // Selecionar arte correta
+                let currentArt = alienArt1;
+                if (a.tipo === 2) currentArt = alienArt2;
+                if (a.tipo === 3) currentArt = alienArt3;
+                if (a.tipo === 4) currentArt = alienArt4;
+
+                drawPixelArt(currentArt, a.x, a.y, a.color);
+
+                // Colisão da bala do jogador com o alien
+                bullets.forEach((b, bi) => {
+                    if (b.x > a.x && b.x < a.x + a.width && b.y > a.y && b.y < a.y + a.height) {
+                        a.hp--;
+                        bullets.splice(bi, 1);
+                        if (a.hp <= 0) {
+                            a.alive = false;
+                            score += (a.tipo * 30);
+                            scoreEl.textContent = score;
+                        }
+                    }
+                });
+
+                // Se o inimigo encostar na nave ou passar do limite
+                if (a.y + a.height >= player.y) {
+                    a.alive = false;
+                    lives--;
+                    livesEl.textContent = lives;
+                    if (lives <= 0) gameOver(false);
+                }
+            });
+
+            // Passar de fase instantaneamente sem pausas
+            if (aliveCount === 0) {
+                level++;
+                levelEl.textContent = level;
+                criarOndaAlienigena();
+            }
+
+            // Exibir notificação de Level na tela
+            if (notificationTimer > 0) {
+                notificationTimer--;
+                ctx.save();
+                ctx.font = "bold 36px sans-serif";
+                ctx.fillStyle = "rgba(234, 179, 8, " + (notificationTimer / 90) + ")";
+                ctx.textAlign = "center";
+                ctx.fillText(notificationText, canvas.width / 2, canvas.height / 2);
+                ctx.restore();
+            }
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') player.dx = -5;
+            if (e.key === 'ArrowRight') player.dx = 5;
+            if (e.key === 'ArrowUp') player.dy = -4;
+            if (e.key === 'ArrowDown') player.dy = 4;
+            if (e.code === 'Space' && isPlaying) {
+                if (bullets.length < 4) {
+                    bullets.push({ x: player.x + player.width / 2 - 1.5, y: player.y });
+                }
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
+        });
+
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris - Meu Site</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <a href="index.html" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-purple-600 font-medium text-sm">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
+            </a>
+            <div class="flex items-center space-x-3">
+                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
+                </button>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tetris</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 w-full text-center">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-lg">
+                    <i class="fa-solid fa-shapes"></i> Tetris
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    Pontos: <span id="score">0</span>
+                </div>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">Use as **setas Esquerda/Direita** para mover, **Baixo** para acelerar e **Cima** para girar!</p>
+            
+            <div class="relative w-full flex justify-center bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
+                <canvas id="gameCanvas" width="200" height="400" class="bg-black rounded-xl max-w-full h-auto shadow-md"></canvas>
+                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white">
+                    <h2 class="text-2xl font-bold mb-2">Tetris Clássico</h2>
+                    <p class="text-sm text-gray-300 mb-6">Encaixe os blocos e faça linhas!</p>
+                    <button id="startBtn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 font-medium rounded-xl shadow-lg transition-all">Iniciar Jogo</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+        if (htmlElement.classList.contains('dark')) themeIcon.classList.replace('fa-sun', 'fa-moon');
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+            themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const overlay = document.getElementById('gameOverlay');
+        const startBtn = document.getElementById('startBtn');
+
+        const ROWS = 20, COLS = 10, BLOCK_SIZE = 20;
+        let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        let score = 0, isPlaying = false, dropInterval = 500, lastTime = 0;
+
+        const SHAPES = [
+            [[1,1,1,1]], // I
+            [[1,1],[1,1]], // O
+            [[0,1,0],[1,1,1]], // T
+            [[1,0],[1,0],[1,1]], // L
+            [[0,1],[0,1],[1,1]]  // J
+        ];
+        const COLORS = ['', '#06B6D4', '#EAB308', '#A855F7', '#F97316', '#3B82F6'];
+
+        let piece = { shape: SHAPES[0], color: 1, x: 3, y: 0 };
+
+        function spawnPiece() {
+            let rand = Math.floor(Math.random() * SHAPES.length);
+            piece.shape = SHAPES[rand];
+            piece.color = rand + 1;
+            piece.x = 3; piece.y = 0;
+            if (checkCollision(0, 0, piece.shape)) {
+                isPlaying = false;
+                overlay.querySelector('h2').textContent = "Game Over!";
+                overlay.querySelector('p').textContent = `Pontuação: ${score}`;
+                startBtn.textContent = "Jogar Novamente";
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        function checkCollision(offsetX, offsetY, shape) {
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        let newX = piece.x + c + offsetX;
+                        let newY = piece.y + r + offsetY;
+                        if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+                        if (newY >= 0 && board[newY][newX]) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function mergePiece() {
+            piece.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val && piece.y + r >= 0) board[piece.y + r][piece.x + c] = piece.color;
+                });
+            });
+        }
+
+        function clearLines() {
+            let lines = 0;
+            board = board.filter(row => {
+                if (row.every(cell => cell !== 0)) { lines++; return false; }
+                return true;
+            });
+            while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
+            if (lines > 0) { score += lines * 100; scoreEl.textContent = score; }
+        }
+
+        function startGame() {
+            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            score = 0; scoreEl.textContent = score;
+            spawnPiece();
+            overlay.classList.add('hidden');
+            isPlaying = true;
+            lastTime = performance.now();
+            requestAnimationFrame(loop);
+        }
+
+        function loop(time = 0) {
+            if (!isPlaying) return;
+            if (time - lastTime > dropInterval) {
+                if (!checkCollision(0, 1, piece.shape)) {
+                    piece.y++;
+                } else {
+                    mergePiece();
+                    clearLines();
+                    spawnPiece();
+                }
+                lastTime = time;
+            }
+
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhar Tabuleiro
+            board.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        ctx.fillStyle = COLORS[val];
+                        ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    }
+                });
+            });
+
+            // Desenhar Peça Ativa
+            piece.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        ctx.fillStyle = COLORS[piece.color];
+                        ctx.fillRect((piece.x + c) * BLOCK_SIZE, (piece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    }
+                });
+            });
+
+            requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('keydown', e => {
+            if (!isPlaying) return;
+            if (e.key === 'ArrowLeft' && !checkCollision(-1, 0, piece.shape)) piece.x--;
+            if (e.key === 'ArrowRight' && !checkCollision(1, 0, piece.shape)) piece.x++;
+            if (e.key === 'ArrowDown' && !checkCollision(0, 1, piece.shape)) piece.y++;
+            if (e.key === 'ArrowUp') {
+                let rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
+                if (!checkCollision(0, 0, rotated)) piece.shape = rotated;
+            }
+        });
+
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

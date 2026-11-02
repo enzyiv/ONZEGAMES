@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Site Responsivo - Início</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <!-- Script preventivo para aplicar o tema antes de carregar a página -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <!-- FontAwesome para os ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <!-- Barra de Navegação (Navbar) -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <div class="flex items-center">
+                    <a href="perfil.html" id="profileBtn" class="p-1 rounded-full text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 relative flex items-center justify-center w-10 h-10 overflow-hidden" aria-label="Perfil">
+                        <i id="navUserIcon" class="fa-solid fa-user text-xl"></i>
+                        <img id="navUserPhoto" class="w-full h-full object-cover hidden absolute inset-0 rounded-full" alt="Foto de Perfil">
+                    </a>
+                </div>
+
+                <div class="flex-1 max-w-xs sm:max-w-md mx-4">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-full text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Alternar Tema">
+                        <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
+                    </button>
+
+                    <div class="relative flex items-center">
+                        <button id="homeBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Menu Principal">
+                            <i class="fa-solid fa-house text-xl"></i>
+                        </button>
+
+                        <!-- Menu Dropdown com as Categorias -->
+                        <div id="homeDropdown" class="hidden absolute right-0 top-12 mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 border border-gray-100 dark:border-gray-700 z-50 transition-all transform origin-top-right">
+                            <a href="#rpg" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fa-solid fa-hat-wizard w-6 text-gray-400 dark:text-gray-500"></i> RPG
+                            </a>
+                            <a href="#tiro" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fa-solid fa-crosshairs w-6 text-gray-400 dark:text-gray-500"></i> Tiro
+                            </a>
+                            <a href="#acao" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fa-solid fa-fire w-6 text-gray-400 dark:text-gray-500"></i> Ação
+                            </a>
+                            <a href="#quebramocabeca" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fa-solid fa-puzzle-piece w-6 text-gray-400 dark:text-gray-500"></i> Quebra-cabeça
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal: Jogos em Destaque -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-6 flex items-center justify-between">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <i class="fa-solid fa-gamepad text-indigo-600 dark:text-indigo-400"></i> Jogos em Destaque
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            
+            <!-- 1. Space Invaders -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoSpaceInvaders" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconeSpaceInvaders" class="fa-solid fa-rocket text-4xl text-indigo-500 dark:text-indigo-400"></i>
+                    <img id="previewSpaceInvaders" class="w-full h-full object-cover hidden" alt="Space Invaders">
+                    <button type="button" id="btnMudarFotoSpaceInvaders" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-indigo-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Ação / Tiro</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Space Invaders</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Defenda a Terra contra ondas de alienígenas neste clássico dos fliperamas.</p>
+                    </div>
+                    <a href="space-invaders.html" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. Super Mariio Bros -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-red-50 dark:bg-red-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoSuperMario" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconeSuperMario" class="fa-solid fa-m text-4xl text-red-500 dark:text-red-400"></i>
+                    <img id="previewSuperMario" class="w-full h-full object-cover hidden" alt="Super Mariio Bros">
+                    <button type="button" id="btnMudarFotoSuperMario" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-red-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">Aventura / Ação</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Super Mariio Bros</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Pule por plataformas, colete moedas e salve a princesa neste mundo incrível.</p>
+                    </div>
+                    <a href="super-mario.html" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. Flappy Bird -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoFlappyBird" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconeFlappyBird" class="fa-solid fa-feather text-4xl text-amber-500 dark:text-amber-400"></i>
+                    <img id="previewFlappyBird" class="w-full h-full object-cover hidden" alt="Flappy Bird">
+                    <button type="button" id="btnMudarFotoFlappyBird" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-amber-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Habilidade / Arcade</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Flappy Bird</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Toque para voar e desvie dos canos desafiadores sem deixar o passarinho cair.</p>
+                    </div>
+                    <a href="flappy-bird.html" class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. Pac-Man -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-yellow-50 dark:bg-yellow-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoPacman" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconePacman" class="fa-solid fa-ghost text-4xl text-yellow-500 dark:text-yellow-400"></i>
+                    <img id="previewPacman" class="w-full h-full object-cover hidden" alt="Pac-Man">
+                    <button type="button" id="btnMudarFotoPacman" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-yellow-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">Labirinto / Clássico</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Pac-Man</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Coma as pastilhas, fuja dos fantasmas e limpe todo o labirinto.</p>
+                    </div>
+                    <a href="pacman.html" class="w-full py-2.5 px-4 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 5. Tetris -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoTetris" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconeTetris" class="fa-solid fa-shapes text-4xl text-purple-500 dark:text-purple-400"></i>
+                    <img id="previewTetris" class="w-full h-full object-cover hidden" alt="Tetris">
+                    <button type="button" id="btnMudarFotoTetris" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-purple-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Quebra-cabeça</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Tetris</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Encaixe os blocos perfeitamente para formar linhas e acumular pontos.</p>
+                    </div>
+                    <a href="tetris.html" class="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 6. Jogo da Cobrinha -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-green-50 dark:bg-green-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoSnake" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconeSnake" class="fa-solid fa-gamepad text-4xl text-green-500 dark:text-green-400"></i>
+                    <img id="previewSnake" class="w-full h-full object-cover hidden" alt="Jogo da Cobrinha">
+                    <button type="button" id="btnMudarFotoSnake" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-green-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider">Arcade / Retrô</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Jogo da Cobrinha</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">Coma as frutas para crescer, mas cuidado para não bater nas paredes ou no próprio corpo.</p>
+                    </div>
+                    <a href="snake.html" class="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 7. Pong -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div class="relative h-48 bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center overflow-hidden group">
+                    <input type="file" id="inputFotoPong" accept=".png, .jpg, .jpeg" class="hidden">
+                    <i id="iconePong" class="fa-solid fa-table-tennis-paddle-ball text-4xl text-sky-500 dark:text-sky-400"></i>
+                    <img id="previewPong" class="w-full h-full object-cover hidden" alt="Pong">
+                    <button type="button" id="btnMudarFotoPong" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium cursor-pointer">
+                        <span class="bg-sky-600 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Alterar Capa
+                        </span>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Esporte / Clássico</span>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-1">Pong</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">O pioneiro dos videogames. Rebata a bola com sua raquete e vença a partida.</p>
+                    </div>
+                    <a href="pong.html" class="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-xl text-sm transition-colors text-center shadow-sm">
+                        Jogar Agora <i class="fa-solid fa-play ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const htmlElement = document.documentElement;
+
+            if (htmlElement.classList.contains('dark')) {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                if (htmlElement.classList.contains('dark')) {
+                    htmlElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    htmlElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            });
+
+            const fotoSalva = localStorage.getItem('usuarioFoto');
+            const navUserIcon = document.getElementById('navUserIcon');
+            const navUserPhoto = document.getElementById('navUserPhoto');
+            if (fotoSalva && navUserIcon && navUserPhoto) {
+                navUserPhoto.src = fotoSalva;
+                navUserPhoto.classList.remove('hidden');
+                navUserIcon.classList.add('hidden');
+            }
+
+            const homeBtn = document.getElementById('homeBtn');
+            const homeDropdown = document.getElementById('homeDropdown');
+            
+            homeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                homeDropdown.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', (e) => {
+                if (!homeBtn.contains(e.target) && !homeDropdown.contains(e.target)) {
+                    homeDropdown.classList.add('hidden');
+                }
+            });
+
+            function configurarTrocaCapa(idBtn, idInput, idPreview, idIcone, storageKey) {
+                const btnMudar = document.getElementById(idBtn);
+                const inputFoto = document.getElementById(idInput);
+                const preview = document.getElementById(idPreview);
+                const icone = document.getElementById(idIcone);
+
+                const fotoSalva = localStorage.getItem(storageKey);
+                if (fotoSalva) {
+                    preview.src = fotoSalva;
+                    preview.classList.remove('hidden');
+                    icone.classList.add('hidden');
+                }
+
+                btnMudar.addEventListener('click', () => {
+                    inputFoto.click();
+                });
+
+                inputFoto.addEventListener('change', (event) => {
+                    const arquivo = event.target.files[0];
+                    if (arquivo) {
+                        const tipoValido = ['image/jpeg', 'image/png'].includes(arquivo.type);
+                        if (!tipoValido) {
+                            alert('Por favor, selecione apenas imagens .png ou .jpg!');
+                            return;
+                        }
+
+                        const leitor = new FileReader();
+                        leitor.onload = function(e) {
+                            const base64Imagem = e.target.result;
+                            preview.src = base64Imagem;
+                            preview.classList.remove('hidden');
+                            icone.classList.add('hidden');
+                            localStorage.setItem(storageKey, base64Imagem);
+                        }
+                        leitor.readAsDataURL(arquivo);
+                    }
+                });
+            }
+
+            // Ativando a troca de capa para todos os 7 jogos
+            configurarTrocaCapa('btnMudarFotoSpaceInvaders', 'inputFotoSpaceInvaders', 'previewSpaceInvaders', 'iconeSpaceInvaders', 'fotoSpaceInvaders');
+            configurarTrocaCapa('btnMudarFotoSuperMario', 'inputFotoSuperMario', 'previewSuperMario', 'iconeSuperMario', 'fotoSuperMario');
+            configurarTrocaCapa('btnMudarFotoFlappyBird', 'inputFotoFlappyBird', 'previewFlappyBird', 'iconeFlappyBird', 'fotoFlappyBird');
+            configurarTrocaCapa('btnMudarFotoPacman', 'inputFotoPacman', 'previewPacman', 'iconePacman', 'fotoPacman');
+            configurarTrocaCapa('btnMudarFotoTetris', 'inputFotoTetris', 'previewTetris', 'iconeTetris', 'fotoTetris');
+            configurarTrocaCapa('btnMudarFotoSnake', 'inputFotoSnake', 'previewSnake', 'iconeSnake', 'fotoSnake');
+            configurarTrocaCapa('btnMudarFotoPong', 'inputFotoPong', 'previewPong', 'iconePong', 'fotoPong');
+        });
+    </script>
+</body>
+</html>
