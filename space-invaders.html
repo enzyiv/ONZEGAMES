@@ -18,7 +18,7 @@
                 <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
             </a>
             <div class="flex items-center space-x-3">
-                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-300 hover:bg-gray-800 transition-colors">
+                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-300 hover:bg-gray-800 transition-colors cursor-pointer">
                     <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
                 </button>
                 <span class="text-sm font-semibold text-gray-200">Space Invaders</span>
@@ -30,7 +30,7 @@
     <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-2 relative">
         
         <!-- Placar Flutuante -->
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-6 text-white text-xs sm:text-sm">
+        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-6 text-white text-xs sm:text-sm pointer-events-none">
             <div class="flex items-center gap-1 font-bold text-indigo-400">
                 <i class="fa-solid fa-rocket"></i> <span class="hidden sm:inline">Space</span>
             </div>
@@ -40,20 +40,20 @@
         </div>
 
         <!-- Canvas -->
-        <div class="relative w-full flex-1 flex items-center justify-center">
+        <div class="relative w-full flex-1 flex items-center justify-center my-auto">
             <canvas id="gameCanvas" width="600" height="460" class="bg-black rounded-2xl shadow-2xl border border-gray-800 max-w-full max-h-[60vh] sm:max-h-[70vh] object-contain"></canvas>
             
             <!-- Overlay de Início / Game Over -->
-            <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-20 rounded-2xl">
+            <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-2xl">
                 <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold mb-3 tracking-wide text-center">Space Invaders</h2>
                 <p id="overlayText" class="text-xs sm:text-sm text-gray-300 mb-6 max-w-sm text-center px-4">Sobreviva aos novos tipos de inimigos em cada fase!</p>
-                <button id="startBtn" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 font-semibold rounded-xl shadow-xl transition-all transform hover:scale-105 cursor-pointer">
+                <button id="startBtn" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-2xl transition-all transform hover:scale-105 cursor-pointer z-45 pointer-events-auto">
                     Iniciar Jogo
                 </button>
             </div>
         </div>
 
-        <!-- Controles Touch para Celular (Começa oculto/hidden) -->
+        <!-- Controles Touch para Celular (Começa oculto) -->
         <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10">
             <!-- Direcional (Esquerda, Direita, Cima, Baixo) -->
             <div class="grid grid-cols-3 gap-1 w-36 h-36 bg-gray-900/60 p-2 rounded-2xl border border-gray-800 backdrop-blur-sm">
@@ -253,10 +253,8 @@
             criarOndaAlienigena();
             overlay.classList.add('hidden');
             
-            // VERIFICA SE É CELULAR/TABLET NO INSTANTE DO CLIQUE
-            // Analisa se a largura da tela é menor que 768px (padrão para tablets/celulares) ou possui suporte a toque
+            // Verifica resolução e suporte a toque para mostrar os botões mobile
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
-            
             if (isMobileDevice) {
                 mobileControls.classList.remove('hidden');
                 mobileControls.classList.add('flex');
@@ -272,7 +270,6 @@
         function gameOver(won) {
             isPlaying = false;
             cancelAnimationFrame(animationId);
-            // Esconde os botões mobile ao terminar o jogo se quiser, ou mantém visíveis. Aqui vamos esconder para limpar a tela de Game Over:
             mobileControls.classList.add('hidden');
             mobileControls.classList.remove('flex');
 
@@ -438,3 +435,66 @@
 
         function dispararTiro() {
             if (isPlaying && bullets.length < 4) {
+                bullets.push({ x: player.x + player.width / 2 - 1.5, y: player.y });
+            }
+        }
+
+        // Teclado (PC)
+        window.addEventListener('keydown', e => {
+            if (!isPlaying) return;
+            if (e.key === 'ArrowLeft') player.dx = -5;
+            if (e.key === 'ArrowRight') player.dx = 5;
+            if (e.key === 'ArrowUp') player.dy = -4;
+            if (e.key === 'ArrowDown') player.dy = 4;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                dispararTiro();
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.key === 'ArrowLeft' && player.dx < 0) player.dx = 0;
+            if (e.key === 'ArrowRight' && player.dx > 0) player.dx = 0;
+            if (e.key === 'ArrowUp' && player.dy < 0) player.dy = 0;
+            if (e.key === 'ArrowDown' && player.dy > 0) player.dy = 0;
+        });
+
+        // Controles Mobile / Pointer Events
+        function setupPointerButton(id, onDown, onUp) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                onDown();
+            });
+            el.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                onUp();
+            });
+            el.addEventListener('pointerleave', (e) => {
+                e.preventDefault();
+                onUp();
+            });
+        }
+
+        setupPointerButton('btnLeft', () => player.dx = -5, () => { if(player.dx < 0) player.dx = 0; });
+        setupPointerButton('btnRight', () => player.dx = 5, () => { if(player.dx > 0) player.dx = 0; });
+        setupPointerButton('btnUp', () => player.dy = -4, () => { if(player.dy < 0) player.dy = 0; });
+        setupPointerButton('btnDown', () => player.dy = 4, () => { if(player.dy > 0) player.dy = 0; });
+
+        document.getElementById('btnShoot').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            dispararTiro();
+        });
+
+        // Listener duplo (click e touchstart direto no botão) para garantir o funcionamento em qualquer celular/PC
+        const triggerStart = (e) => {
+            e.preventDefault();
+            startGame();
+        };
+
+        startBtn.addEventListener('click', triggerStart);
+        startBtn.addEventListener('touchstart', triggerStart, { passive: false });
+    </script>
+</body>
+</html>
