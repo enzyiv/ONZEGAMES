@@ -47,7 +47,7 @@
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-20 rounded-2xl">
                 <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold mb-3 tracking-wide text-center">Space Invaders</h2>
                 <p id="overlayText" class="text-xs sm:text-sm text-gray-300 mb-6 max-w-sm text-center px-4">Sobreviva aos novos tipos de inimigos em cada fase!</p>
-                <button id="startBtn" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 font-semibold rounded-xl shadow-xl transition-all transform hover:scale-105">
+                <button id="startBtn" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 font-semibold rounded-xl shadow-xl transition-all transform hover:scale-105 cursor-pointer">
                     Iniciar Jogo
                 </button>
             </div>
@@ -170,7 +170,6 @@
         let notificationText = "";
         let notificationTimer = 0;
 
-        // Função para criar efeito de explosão em pixel art
         function criarExplosao(x, y, color) {
             for (let i = 0; i < 16; i++) {
                 particles.push({
@@ -235,17 +234,24 @@
         }
 
         function startGame() {
-            score = 0; lives = 3; level = 1;
+            score = 0; 
+            lives = 3; 
+            level = 1;
             scoreEl.textContent = score;
             livesEl.textContent = lives;
             levelEl.textContent = level;
-            bullets = []; enemyBullets = []; particles = [];
+            bullets = []; 
+            enemyBullets = []; 
+            particles = [];
             player.x = canvas.width / 2 - 16;
             player.y = canvas.height - 40;
+            player.dx = 0;
+            player.dy = 0;
             player.invincibleTimer = 0;
             criarOndaAlienigena();
             overlay.classList.add('hidden');
             isPlaying = true;
+            cancelAnimationFrame(animationId);
             loop();
         }
 
@@ -263,10 +269,8 @@
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Atualiza temporizador de invencibilidade do player
             if (player.invincibleTimer > 0) player.invincibleTimer--;
 
-            // Movimentação e Limite Rigoroso da Nave
             player.x += player.dx;
             player.y += player.dy;
 
@@ -275,12 +279,10 @@
             if (player.y < canvas.height * 0.6) { player.y = canvas.height * 0.6; player.dy = 0; }
             if (player.y + player.height > canvas.height - 10) { player.y = canvas.height - 10 - player.height; player.dy = 0; }
 
-            // Desenha o Player (pisca se estiver invencível após tomar dano)
             if (player.invincibleTimer === 0 || Math.floor(player.invincibleTimer / 4) % 2 === 0) {
                 drawPixelArt(playerArt, player.x, player.y, '#3B82F6');
             }
 
-            // Atualiza e desenha partículas de explosão (Pixel Art)
             particles.forEach((p, index) => {
                 p.x += p.vx;
                 p.y += p.vy;
@@ -295,7 +297,6 @@
                 }
             });
 
-            // Balas do Jogador
             bullets.forEach((b, index) => {
                 b.y -= 7;
                 ctx.fillStyle = '#F59E0B';
@@ -303,7 +304,6 @@
                 if (b.y < 0) bullets.splice(index, 1);
             });
 
-            // Balas Inimigas
             enemyBullets.forEach((eb, index) => {
                 eb.y += 4.5;
                 ctx.fillStyle = '#EC4899';
@@ -313,7 +313,7 @@
                     enemyBullets.splice(index, 1);
                     lives--;
                     livesEl.textContent = lives;
-                    player.invincibleTimer = 60; // 1 segundo de invencibilidade/pisca-pisca
+                    player.invincibleTimer = 60;
                     criarExplosao(player.x + player.width/2, player.y + player.height/2, '#3B82F6');
                     if (lives <= 0) gameOver(false);
                 }
@@ -364,7 +364,6 @@
 
                 drawPixelArt(currentArt, a.x, a.y, a.color);
 
-                // Colisão da bala com o inimigo
                 bullets.forEach((b, bi) => {
                     if (b.x > a.x && b.x < a.x + a.width && b.y > a.y && b.y < a.y + a.height) {
                         a.hp--;
@@ -378,7 +377,6 @@
                     }
                 });
 
-                // Colisão direta da nave inimiga com o player (Agora gera explosão e retira vida)
                 let hitPlayer = (
                     a.x < player.x + player.width &&
                     a.x + a.width > player.x &&
@@ -448,20 +446,4 @@
             el.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
             el.addEventListener('mousedown', () => { onDown(); });
             el.addEventListener('mouseup', () => { onUp(); });
-            el.addEventListener('mouseleave', () => { onUp(); });
-        }
-
-        bindTouchButton('btnLeft', () => player.dx = -5, () => { if(player.dx < 0) player.dx = 0; });
-        bindTouchButton('btnRight', () => player.dx = 5, () => { if(player.dx > 0) player.dx = 0; });
-        bindTouchButton('btnUp', () => player.dy = -4, () => { if(player.dy < 0) player.dy = 0; });
-        bindTouchButton('btnDown', () => player.dy = 4, () => { if(player.dy > 0) player.dy = 0; });
-
-        document.getElementById('btnShoot').addEventListener('click', (e) => {
-            e.preventDefault();
-            dispararTiro();
-        });
-
-        startBtn.addEventListener('click', startGame);
-    </script>
-</body>
-</html>
+            el.addEventListener('mouseleave',
