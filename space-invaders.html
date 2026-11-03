@@ -26,7 +26,7 @@
         </div>
     </header>
 
-    <!-- Área do Jogo em Tela Cheia -->
+    <!-- Área do Jogo -->
     <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-2 relative">
         
         <!-- Placar Flutuante -->
@@ -53,8 +53,8 @@
             </div>
         </div>
 
-        <!-- Controles Touch para Celular -->
-        <div class="w-full max-w-md flex items-center justify-between px-4 pb-2 z-10">
+        <!-- Controles Touch para Celular (Começa oculto/hidden) -->
+        <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10">
             <!-- Direcional (Esquerda, Direita, Cima, Baixo) -->
             <div class="grid grid-cols-3 gap-1 w-36 h-36 bg-gray-900/60 p-2 rounded-2xl border border-gray-800 backdrop-blur-sm">
                 <div></div>
@@ -98,8 +98,9 @@
         const overlayTitle = document.getElementById('overlayTitle');
         const overlayText = document.getElementById('overlayText');
         const startBtn = document.getElementById('startBtn');
+        const mobileControls = document.getElementById('mobileControls');
 
-        let score = 0, lives = 3, level = 1, isPlaying = false, animationId;
+        let score = 0, lives = 3, level = 1, isPlaying = false, animationId = null;
         const pixelSize = 3;
 
         // Pixel Arts para os 4 Tipos de Inimigos
@@ -234,6 +235,7 @@
         }
 
         function startGame() {
+            if (animationId) cancelAnimationFrame(animationId);
             score = 0; 
             lives = 3; 
             level = 1;
@@ -250,14 +252,30 @@
             player.invincibleTimer = 0;
             criarOndaAlienigena();
             overlay.classList.add('hidden');
+            
+            // VERIFICA SE É CELULAR/TABLET NO INSTANTE DO CLIQUE
+            // Analisa se a largura da tela é menor que 768px (padrão para tablets/celulares) ou possui suporte a toque
+            const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
+            
+            if (isMobileDevice) {
+                mobileControls.classList.remove('hidden');
+                mobileControls.classList.add('flex');
+            } else {
+                mobileControls.classList.add('hidden');
+                mobileControls.classList.remove('flex');
+            }
+
             isPlaying = true;
-            cancelAnimationFrame(animationId);
             loop();
         }
 
         function gameOver(won) {
             isPlaying = false;
             cancelAnimationFrame(animationId);
+            // Esconde os botões mobile ao terminar o jogo se quiser, ou mantém visíveis. Aqui vamos esconder para limpar a tela de Game Over:
+            mobileControls.classList.add('hidden');
+            mobileControls.classList.remove('flex');
+
             overlayTitle.textContent = won ? "Parabéns! Vitória Absoluta!" : "Game Over!";
             overlayText.textContent = `Pontuação final: ${score} | Nível: ${level}`;
             startBtn.textContent = "Jogar Novamente";
@@ -420,46 +438,3 @@
 
         function dispararTiro() {
             if (isPlaying && bullets.length < 4) {
-                bullets.push({ x: player.x + player.width / 2 - 1.5, y: player.y });
-            }
-        }
-
-        window.addEventListener('keydown', e => {
-            if (e.key === 'ArrowLeft') player.dx = -5;
-            if (e.key === 'ArrowRight') player.dx = 5;
-            if (e.key === 'ArrowUp') player.dy = -4;
-            if (e.key === 'ArrowDown') player.dy = 4;
-            if (e.code === 'Space') dispararTiro();
-        });
-
-        window.addEventListener('keyup', e => {
-            if (e.key === 'ArrowLeft' && player.dx < 0) player.dx = 0;
-            if (e.key === 'ArrowRight' && player.dx > 0) player.dx = 0;
-            if (e.key === 'ArrowUp' && player.dy < 0) player.dy = 0;
-            if (e.key === 'ArrowDown' && player.dy > 0) player.dy = 0;
-        });
-
-        function bindTouchButton(id, onDown, onUp) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
-            el.addEventListener('mousedown', () => { onDown(); });
-            el.addEventListener('mouseup', () => { onUp(); });
-            el.addEventListener('mouseleave', () => { onUp(); });
-        }
-
-        bindTouchButton('btnLeft', () => player.dx = -5, () => { if(player.dx < 0) player.dx = 0; });
-        bindTouchButton('btnRight', () => player.dx = 5, () => { if(player.dx > 0) player.dx = 0; });
-        bindTouchButton('btnUp', () => player.dy = -4, () => { if(player.dy < 0) player.dy = 0; });
-        bindTouchButton('btnDown', () => player.dy = 4, () => { if(player.dy > 0) player.dy = 0; });
-
-        document.getElementById('btnShoot').addEventListener('click', (e) => {
-            e.preventDefault();
-            dispararTiro();
-        });
-
-        startBtn.addEventListener('click', startGame);
-    </script>
-</body>
-</html>
