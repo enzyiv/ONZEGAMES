@@ -446,4 +446,20 @@
             el.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
             el.addEventListener('mousedown', () => { onDown(); });
             el.addEventListener('mouseup', () => { onUp(); });
-            el.addEventListener('mouseleave',
+            el.addEventListener('mouseleave', () => { onUp(); });
+        }
+
+        bindTouchButton('btnLeft', () => player.dx = -5, () => { if(player.dx < 0) player.dx = 0; });
+        bindTouchButton('btnRight', () => player.dx = 5, () => { if(player.dx > 0) player.dx = 0; });
+        bindTouchButton('btnUp', () => player.dy = -4, () => { if(player.dy < 0) player.dy = 0; });
+        bindTouchButton('btnDown', () => player.dy = 4, () => { if(player.dy > 0) player.dy = 0; });
+
+        document.getElementById('btnShoot').addEventListener('click', (e) => {
+            e.preventDefault();
+            dispararTiro();
+        });
+
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
