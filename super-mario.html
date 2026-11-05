@@ -26,20 +26,20 @@
         </div>
     </header>
 
-    <!-- Área do Jogo Totalmente Expandida -->
-    <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-2 relative">
+    <!-- Área do Jogo Otimizada para Mobile e PC -->
+    <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-1 sm:p-2 relative">
         
         <!-- Placar Flutuante -->
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-6 text-white text-xs sm:text-sm pointer-events-none">
+        <div class="absolute top-3 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-4 text-white text-xs sm:text-sm pointer-events-none">
             <div class="flex items-center gap-1 font-bold text-red-500">
                 <i class="fa-solid fa-m"></i> <span class="hidden sm:inline">Super Mario</span>
             </div>
             <div>Moedas: <span id="score" class="text-yellow-400 font-bold">0</span></div>
         </div>
 
-        <!-- Canvas Expandido sem Bordas -->
+        <!-- Canvas com proporção maior no celular -->
         <div class="relative w-full flex-1 flex items-center justify-center my-auto">
-            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-2xl shadow-2xl border border-gray-800 max-w-full max-h-[65vh] sm:max-h-[75vh] object-contain"></canvas>
+            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-2xl shadow-2xl border border-gray-800 w-full max-w-5xl h-[78vh] sm:h-auto sm:max-h-[75vh] object-fill sm:object-contain"></canvas>
             
             <!-- Overlay de Início / Game Over -->
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-2xl">
@@ -51,23 +51,23 @@
             </div>
         </div>
 
-        <!-- Controles Touch para Celular (Espelhados do Space Invaders) -->
-        <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10">
+        <!-- Controles Touch para Celular -->
+        <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-3 z-10">
             <!-- Direcional (Esquerda, Direita) -->
-            <div class="flex gap-3">
-                <button id="btnLeft" class="w-16 h-16 bg-gray-800/80 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl transition-colors border border-gray-700 shadow-lg">
+            <div class="flex gap-4">
+                <button id="btnLeft" class="w-18 h-18 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-2xl transition-colors border border-gray-700 shadow-xl">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <button id="btnRight" class="w-16 h-16 bg-gray-800/80 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl transition-colors border border-gray-700 shadow-lg">
+                <button id="btnRight" class="w-18 h-18 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-2xl transition-colors border border-gray-700 shadow-xl">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
 
             <!-- Botão de Pulo -->
             <div class="flex items-center justify-center">
-                <button id="btnJump" class="w-20 h-20 bg-red-600/90 active:bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider transition-all transform active:scale-95">
-                    <i class="fa-solid fa-arrow-up text-lg mb-0.5"></i>
-                    <span class="text-[10px]">PULAR</span>
+                <button id="btnJump" class="w-22 h-22 bg-red-600/95 active:bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider transition-all transform active:scale-95">
+                    <i class="fa-solid fa-arrow-up text-xl mb-0.5"></i>
+                    <span class="text-[11px]">PULAR</span>
                 </button>
             </div>
         </div>
@@ -96,7 +96,6 @@
         let score = 0, isPlaying = false, animId;
         let mario = { x: 50, y: 280, width: 22, height: 28, dx: 0, dy: 0, gravity: 0.5, jumpPower: -10, grounded: false };
         
-        // Plataformas proporcionais à nova largura de 800px com abismos
         let platforms = [
             { x: 0, y: 330, width: 320, height: 50 },
             { x: 380, y: 330, width: 220, height: 50 },
@@ -142,7 +141,6 @@
             if (!isPlaying) return;
             ctx.fillStyle = '#38BDF8'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Gravidade e Física
             mario.dy += mario.gravity;
             mario.y += mario.dy;
             mario.x += mario.dx;
@@ -160,11 +158,9 @@
                 }
             });
 
-            // Desenhar plataformas
             ctx.fillStyle = '#15803D';
             platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
 
-            // Desenhar Moedas
             coins.forEach(c => {
                 if (!c.collected) {
                     ctx.fillStyle = '#FACC15';
@@ -175,7 +171,6 @@
                 }
             });
 
-            // Desenhar Mario
             ctx.fillStyle = '#EF4444'; ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
 
             if (mario.y > canvas.height) {
@@ -191,7 +186,6 @@
             }
         }
 
-        // Teclado (PC)
         window.addEventListener('keydown', e => {
             if (!isPlaying) return;
             if (e.key === 'ArrowLeft') mario.dx = -4;
@@ -207,22 +201,12 @@
             if (e.key === 'ArrowRight' && mario.dx > 0) mario.dx = 0;
         });
 
-        // Configuração dos Controles Mobile
         function setupPointerButton(id, onDown, onUp) {
             const el = document.getElementById(id);
             if (!el) return;
-            el.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                onDown();
-            });
-            el.addEventListener('pointerup', (e) => {
-                e.preventDefault();
-                onUp();
-            });
-            el.addEventListener('pointerleave', (e) => {
-                e.preventDefault();
-                onUp();
-            });
+            el.addEventListener('pointerdown', (e) => { e.preventDefault(); onDown(); });
+            el.addEventListener('pointerup', (e) => { e.preventDefault(); onUp(); });
+            el.addEventListener('pointerleave', (e) => { e.preventDefault(); onUp(); });
         }
 
         setupPointerButton('btnLeft', () => mario.dx = -4, () => { if(mario.dx < 0) mario.dx = 0; });
