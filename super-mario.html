@@ -2,14 +2,14 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Super Mariio Bros - Meu Site</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200 overflow-hidden select-none">
 
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -17,7 +17,7 @@
                 <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Início
             </a>
             <div class="flex items-center space-x-3">
-                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
                     <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
                 </button>
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Super Mariio Bros</span>
@@ -25,9 +25,9 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 w-full text-center">
-            <div class="flex items-center justify-between mb-4">
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-4 flex flex-col items-center justify-between">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 w-full text-center flex flex-col items-center">
+            <div class="flex items-center justify-between w-full mb-2">
                 <div class="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-lg">
                     <i class="fa-solid fa-m"></i> Super Mariio Bros
                 </div>
@@ -35,15 +35,36 @@
                     Moedas: <span id="score">0</span>
                 </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">Use as **Setas Esquerda/Direita** para andar e **Espaço** para pular as plataformas!</p>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Use as **Setas Esquerda/Direita** (ou os botões abaixo) para andar e **Espaço/Botão de Pulo** para saltar!</p>
             
             <div class="relative w-full flex justify-center bg-sky-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
-                <canvas id="gameCanvas" width="480" height="300" class="bg-sky-400 rounded-xl max-w-full h-auto shadow-md"></canvas>
-                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white">
+                <canvas id="gameCanvas" width="480" height="260" class="bg-sky-400 rounded-xl max-w-full h-auto shadow-md object-contain"></canvas>
+                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-30">
                     <h2 class="text-2xl font-bold mb-2">Super Mariio Bros</h2>
                     <p class="text-sm text-gray-300 mb-6">Colete moedas e desvie dos abismos!</p>
-                    <button id="startBtn" class="px-6 py-3 bg-red-600 hover:bg-red-700 font-medium rounded-xl shadow-lg transition-all">Iniciar Jogo</button>
+                    <button id="startBtn" class="px-8 py-3.5 bg-red-600 hover:bg-red-700 active:bg-red-800 font-bold rounded-xl shadow-lg transition-all cursor-pointer">Iniciar Jogo</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Controles Touch para Celular (Espelhado na lógica do Space Invaders) -->
+        <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10 mt-2">
+            <!-- Direcional (Esquerda, Direita) -->
+            <div class="flex gap-3">
+                <button id="btnLeft" class="w-16 h-16 bg-gray-800/80 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl transition-colors border border-gray-700 shadow-lg">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="btnRight" class="w-16 h-16 bg-gray-800/80 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl transition-colors border border-gray-700 shadow-lg">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Botão de Pulo -->
+            <div class="flex items-center justify-center">
+                <button id="btnJump" class="w-20 h-20 bg-red-600/90 active:bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider transition-all transform active:scale-95">
+                    <i class="fa-solid fa-arrow-up text-lg mb-0.5"></i>
+                    <span class="text-[10px]">PULAR</span>
+                </button>
             </div>
         </div>
     </main>
@@ -64,21 +85,40 @@
         const scoreEl = document.getElementById('score');
         const overlay = document.getElementById('gameOverlay');
         const startBtn = document.getElementById('startBtn');
+        const mobileControls = document.getElementById('mobileControls');
 
         let score = 0, isPlaying = false, animId;
-        let mario = { x: 50, y: 200, width: 20, height: 26, dx: 0, dy: 0, gravity: 0.5, jumpPower: -9, grounded: false };
+        let mario = { x: 50, y: 180, width: 20, height: 26, dx: 0, dy: 0, gravity: 0.5, jumpPower: -9, grounded: false };
         let platforms = [
-            { x: 0, y: 260, width: 500, height: 40 },
-            { x: 150, y: 190, width: 90, height: 16 },
-            { x: 280, y: 130, width: 90, height: 16 }
+            { x: 0, y: 220, width: 500, height: 40 },
+            { x: 150, y: 160, width: 90, height: 16 },
+            { x: 280, y: 100, width: 90, height: 16 }
         ];
-        let coins = [{ x: 180, y: 150, collected: false }, { x: 310, y: 90, collected: false }];
+        let coins = [{ x: 180, y: 120, collected: false }, { x: 310, y: 60, collected: false }];
+
+        function pular() {
+            if (isPlaying && mario.grounded) {
+                mario.dy = mario.jumpPower;
+                mario.grounded = false;
+            }
+        }
 
         function startGame() {
             score = 0; scoreEl.textContent = score;
-            mario.x = 50; mario.y = 200; mario.dy = 0;
+            mario.x = 50; mario.y = 180; mario.dy = 0; mario.dx = 0;
             coins.forEach(c => c.collected = false);
             overlay.classList.add('hidden');
+
+            // Detecção de resolução/dispositivo móvel igual ao Space Invaders
+            const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
+            if (isMobileDevice) {
+                mobileControls.classList.remove('hidden');
+                mobileControls.classList.add('flex');
+            } else {
+                mobileControls.classList.add('hidden');
+                mobileControls.classList.remove('flex');
+            }
+
             isPlaying = true;
             loop();
         }
@@ -125,23 +165,66 @@
 
             if (mario.y > canvas.height) {
                 isPlaying = false;
+                mobileControls.classList.add('hidden');
+                mobileControls.classList.remove('flex');
                 overlay.querySelector('h2').textContent = "Game Over!";
                 overlay.querySelector('p').textContent = `Você caiu! Moedas: ${score}`;
+                startBtn.textContent = "Jogar Novamente";
                 overlay.classList.remove('hidden');
             } else {
                 animId = requestAnimationFrame(loop);
             }
         }
 
+        // Teclado (PC)
         window.addEventListener('keydown', e => {
+            if (!isPlaying) return;
             if (e.key === 'ArrowLeft') mario.dx = -3;
             if (e.key === 'ArrowRight') mario.dx = 3;
-            if (e.key === ' ' && mario.grounded) { mario.dy = mario.jumpPower; mario.grounded = false; }
+            if (e.key === ' ') {
+                e.preventDefault();
+                pular();
+            }
         });
+
         window.addEventListener('keyup', e => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') mario.dx = 0;
+            if (e.key === 'ArrowLeft' && mario.dx < 0) mario.dx = 0;
+            if (e.key === 'ArrowRight' && mario.dx > 0) mario.dx = 0;
         });
-        startBtn.addEventListener('click', startGame);
+
+        // Configuração dos Controles Mobile (Pointer Events idênticos ao Space Invaders)
+        function setupPointerButton(id, onDown, onUp) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                onDown();
+            });
+            el.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                onUp();
+            });
+            el.addEventListener('pointerleave', (e) => {
+                e.preventDefault();
+                onUp();
+            });
+        }
+
+        setupPointerButton('btnLeft', () => mario.dx = -3, () => { if(mario.dx < 0) mario.dx = 0; });
+        setupPointerButton('btnRight', () => mario.dx = 3, () => { if(mario.dx > 0) mario.dx = 0; });
+
+        document.getElementById('btnJump').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            pular();
+        });
+
+        const triggerStart = (e) => {
+            e.preventDefault();
+            startGame();
+        };
+
+        startBtn.addEventListener('click', triggerStart);
+        startBtn.addEventListener('touchstart', triggerStart, { passive: false });
     </script>
 </body>
 </html>
