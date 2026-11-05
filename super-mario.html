@@ -25,8 +25,8 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-4 flex flex-col items-center justify-between">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 w-full text-center flex flex-col items-center">
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-2 flex flex-col items-center justify-between">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 w-full text-center flex flex-col items-center">
             <div class="flex items-center justify-between w-full mb-2">
                 <div class="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-lg">
                     <i class="fa-solid fa-m"></i> Super Mariio Bros
@@ -35,10 +35,11 @@
                     Moedas: <span id="score">0</span>
                 </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Use as **Setas Esquerda/Direita** (ou os botões abaixo) para andar e **Espaço/Botão de Pulo** para saltar!</p>
+            <p class="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-3">Use as **Setas Esquerda/Direita** para andar e **Espaço/Pular** para saltar!</p>
             
-            <div class="relative w-full flex justify-center bg-sky-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
-                <canvas id="gameCanvas" width="480" height="260" class="bg-sky-400 rounded-xl max-w-full h-auto shadow-md object-contain"></canvas>
+            <!-- Área do Jogo Expandida (Sem bordas indesejadas) -->
+            <div class="relative w-full flex justify-center rounded-2xl overflow-hidden shadow-inner border border-gray-800 bg-sky-400">
+                <canvas id="gameCanvas" width="640" height="280" class="bg-sky-400 w-full max-h-[55vh] object-contain"></canvas>
                 <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-30">
                     <h2 class="text-2xl font-bold mb-2">Super Mariio Bros</h2>
                     <p class="text-sm text-gray-300 mb-6">Colete moedas e desvie dos abismos!</p>
@@ -47,7 +48,7 @@
             </div>
         </div>
 
-        <!-- Controles Touch para Celular (Espelhado na lógica do Space Invaders) -->
+        <!-- Controles Touch para Celular -->
         <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10 mt-2">
             <!-- Direcional (Esquerda, Direita) -->
             <div class="flex gap-3">
@@ -89,12 +90,20 @@
 
         let score = 0, isPlaying = false, animId;
         let mario = { x: 50, y: 180, width: 20, height: 26, dx: 0, dy: 0, gravity: 0.5, jumpPower: -9, grounded: false };
+        
+        // Plataformas ajustadas para a nova largura de 640px
         let platforms = [
-            { x: 0, y: 220, width: 500, height: 40 },
-            { x: 150, y: 160, width: 90, height: 16 },
-            { x: 280, y: 100, width: 90, height: 16 }
+            { x: 0, y: 240, width: 640, height: 40 },
+            { x: 180, y: 170, width: 110, height: 16 },
+            { x: 360, y: 110, width: 110, height: 16 },
+            { x: 520, y: 170, width: 90, height: 16 }
         ];
-        let coins = [{ x: 180, y: 120, collected: false }, { x: 310, y: 60, collected: false }];
+        
+        let coins = [
+            { x: 225, y: 130, collected: false }, 
+            { x: 410, y: 70, collected: false },
+            { x: 560, y: 130, collected: false }
+        ];
 
         function pular() {
             if (isPlaying && mario.grounded) {
@@ -109,7 +118,6 @@
             coins.forEach(c => c.collected = false);
             overlay.classList.add('hidden');
 
-            // Detecção de resolução/dispositivo móvel igual ao Space Invaders
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
             if (isMobileDevice) {
                 mobileControls.classList.remove('hidden');
@@ -133,7 +141,7 @@
             mario.x += mario.dx;
 
             if (mario.x < 0) mario.x = 0;
-            if (mario.x > canvas.width) mario.x = 0;
+            if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
 
             mario.grounded = false;
             platforms.forEach(p => {
@@ -179,8 +187,8 @@
         // Teclado (PC)
         window.addEventListener('keydown', e => {
             if (!isPlaying) return;
-            if (e.key === 'ArrowLeft') mario.dx = -3;
-            if (e.key === 'ArrowRight') mario.dx = 3;
+            if (e.key === 'ArrowLeft') mario.dx = -3.5;
+            if (e.key === 'ArrowRight') mario.dx = 3.5;
             if (e.key === ' ') {
                 e.preventDefault();
                 pular();
@@ -192,7 +200,7 @@
             if (e.key === 'ArrowRight' && mario.dx > 0) mario.dx = 0;
         });
 
-        // Configuração dos Controles Mobile (Pointer Events idênticos ao Space Invaders)
+        // Configuração dos Controles Mobile
         function setupPointerButton(id, onDown, onUp) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -210,8 +218,8 @@
             });
         }
 
-        setupPointerButton('btnLeft', () => mario.dx = -3, () => { if(mario.dx < 0) mario.dx = 0; });
-        setupPointerButton('btnRight', () => mario.dx = 3, () => { if(mario.dx > 0) mario.dx = 0; });
+        setupPointerButton('btnLeft', () => mario.dx = -3.5, () => { if(mario.dx < 0) mario.dx = 0; });
+        setupPointerButton('btnRight', () => mario.dx = 3.5, () => { if(mario.dx > 0) mario.dx = 0; });
 
         document.getElementById('btnJump').addEventListener('pointerdown', (e) => {
             e.preventDefault();
