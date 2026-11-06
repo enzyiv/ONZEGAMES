@@ -17,7 +17,7 @@
             background: rgba(0, 0, 0, 0.95);
             z-index: 9999;
             flex-direction: column;
-            align-items: center;
+            items-center: center;
             justify-content: center;
             color: white;
             text-align: center;
@@ -33,7 +33,7 @@
 <body class="bg-gray-950 h-screen flex flex-col font-sans overflow-hidden select-none">
 
     <!-- Aviso para virar o celular -->
-    <div id="rotateWarning">
+    <div id="rotateWarning" class="flex flex-col items-center justify-center">
         <i class="fa-solid fa-mobile-screen-button text-5xl mb-4 animate-bounce text-red-500"></i>
         <h2 class="text-xl font-bold mb-2">Por favor, vire o celular!</h2>
         <p class="text-sm text-gray-300 max-w-xs">Este jogo foi feito para ser jogado com o celular na horizontal (paisagem).</p>
@@ -41,72 +41,69 @@
 
     <!-- Barra Superior -->
     <header class="bg-gray-900/85 backdrop-blur-md border-b border-gray-800 shrink-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
-            <a href="index.html" class="flex items-center text-gray-300 hover:text-red-500 transition-colors font-medium text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12 sm:h-14">
+            <a href="index.html" class="flex items-center text-gray-300 hover:text-red-500 transition-colors font-medium text-xs sm:text-sm">
                 <i class="fa-solid fa-arrow-left mr-2"></i> Voltar
             </a>
             <div class="flex items-center space-x-3">
                 <button id="themeToggleBtn" class="p-2 rounded-full text-gray-300 hover:bg-gray-800 transition-colors cursor-pointer">
-                    <i id="themeIcon" class="fa-solid fa-sun text-lg"></i>
+                    <i id="themeIcon" class="fa-solid fa-sun text-base sm:text-lg"></i>
                 </button>
-                <span class="text-sm font-semibold text-gray-200">Super Mariio Bros</span>
+                <span class="text-xs sm:text-sm font-semibold text-gray-200">Super Mariio Bros</span>
             </div>
         </div>
     </header>
 
     <!-- Área do Jogo Ajustada -->
-    <main id="gameMain" class="w-full flex-1 flex flex-col items-center justify-between p-2 relative overflow-hidden">
+    <main id="gameMain" class="w-full flex-1 flex flex-col items-center justify-between p-1 sm:p-2 relative overflow-hidden">
         
         <!-- Placar Flutuante -->
-        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-4 text-white text-xs pointer-events-none">
+        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-4 py-1 rounded-xl border border-gray-800 shadow-xl flex items-center gap-4 text-white text-xs pointer-events-none">
             <div class="flex items-center gap-1 font-bold text-red-500">
                 <i class="fa-solid fa-m"></i> <span>Super Mario</span>
             </div>
             <div>Moedas: <span id="score" class="text-yellow-400 font-bold">0</span></div>
         </div>
 
-        <!-- Canvas Proporcional -->
+        <!-- Botão de Tela Cheia Inteligente (Canto Inferior Direito) -->
+        <button id="fullscreenBtn" class="absolute bottom-2 right-3 z-30 bg-gray-800/80 hover:bg-gray-700 active:bg-gray-600 text-white p-2.5 rounded-full shadow-lg backdrop-blur-md border border-gray-700 transition-all cursor-pointer">
+            <i id="fullscreenIcon" class="fa-solid fa-expand text-sm"></i>
+        </button>
+
+        <!-- Canvas Proporcional com margem segura para mobile -->
         <div class="relative w-full flex-1 flex items-center justify-center my-auto px-2">
-            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-xl shadow-2xl border border-gray-800 max-w-full max-h-full object-contain"></canvas>
+            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-xl shadow-2xl border border-gray-800 max-w-full h-[58vh] sm:h-[65vh] object-contain"></canvas>
             
             <!-- Overlay de Início / Game Over -->
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-xl m-2">
-                <h2 id="overlayTitle" class="text-2xl font-extrabold mb-2 tracking-wide text-center">Super Mariio Bros</h2>
+                <h2 id="overlayTitle" class="text-xl sm:text-2xl font-extrabold mb-2 tracking-wide text-center">Super Mariio Bros</h2>
                 <p id="overlayText" class="text-xs text-gray-300 mb-4 max-w-sm text-center px-4">Colete moedas e desvie dos abismos nas plataformas!</p>
-                <button id="startBtn" class="px-6 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-xl shadow-2xl transition-all cursor-pointer z-40">
+                <button id="startBtn" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-xl shadow-2xl transition-all cursor-pointer z-40 text-sm">
                     Iniciar Jogo
                 </button>
             </div>
         </div>
 
         <!-- Controles Touch Compactos para Celular -->
-        <div id="mobileControls" class="w-full max-w-xl hidden items-center justify-between px-4 pb-2 z-10 shrink-0">
+        <div id="mobileControls" class="w-full max-w-xl hidden items-center justify-between px-4 pb-1 z-10 shrink-0">
             <div class="flex gap-3">
-                <button id="btnLeft" class="w-16 h-16 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl border border-gray-700 shadow-xl">
+                <button id="btnLeft" class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-lg border border-gray-700 shadow-xl">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <button id="btnRight" class="w-16 h-16 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl border border-gray-700 shadow-xl">
+                <button id="btnRight" class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-800/90 active:bg-red-600 text-white rounded-2xl flex items-center justify-center text-lg border border-gray-700 shadow-xl">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
             <div class="flex items-center justify-center">
-                <button id="btnJump" class="w-20 h-20 bg-red-600/95 active:bg-red-500 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider">
-                    <i class="fa-solid fa-arrow-up text-lg mb-0.5"></i>
-                    <span class="text-[10px]">PULAR</span>
+                <button id="btnJump" class="w-16 h-16 sm:w-20 sm:h-20 bg-red-600/95 active:bg-red-500 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider">
+                    <i class="fa-solid fa-arrow-up text-base mb-0.5"></i>
+                    <span class="text-[9px]">PULAR</span>
                 </button>
             </div>
         </div>
     </main>
 
     <script>
-        // Corrige o bug do tamanho da tela no Safari mobile (barra de endereço)
-        function ajustarAltura() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-        window.addEventListener('resize', ajustarAltura);
-        ajustarAltura();
-
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIcon = document.getElementById('themeIcon');
         const htmlElement = document.documentElement;
@@ -116,6 +113,42 @@
             localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
+
+        // Gerenciamento do Botão de Tela Cheia (Alterna entre expandir e recolher)
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fullscreenIcon = document.getElementById('fullscreenIcon');
+        const gameMain = document.getElementById('gameMain');
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Entrar em tela cheia na tag main ou no documento inteiro
+                if (gameMain.requestFullscreen) {
+                    gameMain.requestFullscreen();
+                } else if (gameMain.webkitRequestFullscreen) {
+                    gameMain.webkitRequestFullscreen(); // Compatibilidade Safari iOS moderno
+                }
+            } else {
+                // Sair da tela cheia
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        });
+
+        // Atualiza o ícone do botão conforme o estado da tela cheia muda
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+
+        function updateFullscreenIcon() {
+            const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+            if (isFull) {
+                fullscreenIcon.classList.replace('fa-expand', 'fa-compress');
+            } else {
+                fullscreenIcon.classList.replace('fa-compress', 'fa-expand');
+            }
+        }
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
