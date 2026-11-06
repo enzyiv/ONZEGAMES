@@ -118,7 +118,20 @@
             }
         }
 
-        function startGame() {
+        async function startGame() {
+            // Tenta forçar a tela cheia e a orientação horizontal (Paisagem) no celular
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock('landscape');
+                }
+            } catch (err) {
+                // Alguns navegadores móveis bloqueiam sem interação profunda do usuário ou permissão total, mas tentamos o melhor esforço
+                console.log("Orientação ou Fullscreen não suportados/bloqueados pelo navegador: ", err);
+            }
+
             score = 0; scoreEl.textContent = score;
             mario.x = 50; mario.y = 280; mario.dy = 0; mario.dx = 0;
             coins.forEach(c => c.collected = false);
