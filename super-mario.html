@@ -9,7 +9,6 @@
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Aviso de rotação para celulares na vertical */
         #rotateWarning {
             display: none;
             position: fixed;
@@ -54,19 +53,19 @@
         </div>
     </header>
 
-    <!-- Área Geral do Jogo Envolvida para Tela Cheia Global -->
+    <!-- Área Geral do Jogo Envolvida para Tela Cheia -->
     <div id="gameWrapper" class="w-full flex-1 flex flex-col bg-gray-950 overflow-hidden">
         
-        <!-- Placar e Botão de Tela Cheia Compactos no Topo -->
+        <!-- Placar, Fase e Botão de Tela Cheia -->
         <div class="w-full max-w-3xl mx-auto flex items-center justify-between px-2 pt-2 z-20">
-            <div class="bg-gray-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-gray-800 shadow-md flex items-center gap-2 text-white text-[11px]">
+            <div class="bg-gray-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-gray-800 shadow-md flex items-center gap-3 text-white text-[11px]">
                 <div class="flex items-center gap-1 font-bold text-red-500">
                     <i class="fa-solid fa-m"></i> <span>Mario</span>
                 </div>
+                <div>Fase: <span id="levelIndicator" class="text-green-400 font-bold">1</span></div>
                 <div>Moedas: <span id="score" class="text-yellow-400 font-bold">0</span></div>
             </div>
 
-            <!-- Botão de Tela Cheia Corrigido -->
             <button id="fullscreenBtn" class="bg-gray-800/90 hover:bg-gray-700 active:bg-gray-600 text-white px-2.5 py-1.5 rounded-lg shadow-md backdrop-blur-md border border-gray-700 transition-all cursor-pointer flex items-center gap-1 text-[11px] font-medium">
                 <i id="fullscreenIcon" class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Tela Cheia</span>
             </button>
@@ -76,17 +75,17 @@
         <main class="w-full flex-1 flex items-center justify-center my-0.5 px-1 relative">
             <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-lg shadow-xl border border-gray-800 max-w-full h-[40vh] sm:h-[58vh] object-contain"></canvas>
             
-            <!-- Overlay de Início / Game Over -->
+            <!-- Overlay de Início / Game Over / Vitória -->
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-lg m-1">
                 <h2 id="overlayTitle" class="text-lg sm:text-2xl font-extrabold mb-1 tracking-wide text-center">Super Mariio Bros</h2>
-                <p id="overlayText" class="text-[10px] sm:text-xs text-gray-300 mb-2 max-w-sm text-center px-4">Colete moedas e desvie dos abismos nas plataformas!</p>
+                <p id="overlayText" class="text-[10px] sm:text-xs text-gray-300 mb-2 max-w-sm text-center px-4">Colete todas as moedas para passar de fase!</p>
                 <button id="startBtn" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-lg shadow-xl transition-all cursor-pointer z-40 text-xs">
                     Iniciar Jogo
                 </button>
             </div>
         </main>
 
-        <!-- Controles Touch Compactos e Perfeitamente Ajustados -->
+        <!-- Controles Touch -->
         <div id="mobileControls" class="w-full max-w-3xl mx-auto hidden items-center justify-between px-3 pb-2 z-10 shrink-0">
             <div class="flex gap-2">
                 <button id="btnLeft" class="w-12 h-12 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
@@ -116,7 +115,7 @@
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
 
-        // Gerenciamento Robusto de Tela Cheia (Funciona em PC e Dispositivos Móveis Compatíveis)
+        // Tela Cheia
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
         const gameWrapper = document.getElementById('gameWrapper');
@@ -124,28 +123,17 @@
         fullscreenBtn.addEventListener('click', () => {
             const doc = document;
             const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
-
             if (!isFullscreen) {
-                if (gameWrapper.requestFullscreen) {
-                    gameWrapper.requestFullscreen().catch(err => console.log(err));
-                } else if (gameWrapper.webkitRequestFullscreen) {
-                    gameWrapper.webkitRequestFullscreen();
-                } else if (gameWrapper.msRequestFullscreen) {
-                    gameWrapper.msRequestFullscreen();
-                }
+                if (gameWrapper.requestFullscreen) gameWrapper.requestFullscreen();
+                else if (gameWrapper.webkitRequestFullscreen) gameWrapper.webkitRequestFullscreen();
             } else {
-                if (doc.exitFullscreen) {
-                    doc.exitFullscreen();
-                } else if (doc.webkitExitFullscreen) {
-                    doc.webkitExitFullscreen();
-                } else if (doc.msExitFullscreen) {
-                    doc.msExitFullscreen();
-                }
+                if (doc.exitFullscreen) doc.exitFullscreen();
+                else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
             }
         });
 
         function updateFullscreenIcon() {
-            const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            const isFull = document.fullscreenElement || document.webkitFullscreenElement;
             if (isFull) {
                 fullscreenIcon.classList.replace('fa-expand', 'fa-compress');
                 fullscreenBtn.querySelector('span').textContent = 'Restaurar';
@@ -154,37 +142,87 @@
                 fullscreenBtn.querySelector('span').textContent = 'Tela Cheia';
             }
         }
-
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
-        document.addEventListener('msfullscreenchange', updateFullscreenIcon);
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
+        const levelIndicator = document.getElementById('levelIndicator');
         const overlay = document.getElementById('gameOverlay');
         const overlayTitle = document.getElementById('overlayTitle');
         const overlayText = document.getElementById('overlayText');
         const startBtn = document.getElementById('startBtn');
         const mobileControls = document.getElementById('mobileControls');
 
-        let score = 0, isPlaying = false, animId;
+        let score = 0, currentLevel = 0, isPlaying = false, animId;
         let mario = { x: 50, y: 280, width: 22, height: 28, dx: 0, dy: 0, gravity: 0.5, jumpPower: -10, grounded: false };
-        
-        let platforms = [
-            { x: 0, y: 330, width: 320, height: 50 },
-            { x: 380, y: 330, width: 220, height: 50 },
-            { x: 640, y: 330, width: 160, height: 50 },
-            { x: 180, y: 230, width: 120, height: 16 },
-            { x: 380, y: 170, width: 130, height: 16 },
-            { x: 580, y: 220, width: 110, height: 16 }
+
+        // BANCO DE FASES (Você pode adicionar quantas fases quiser aqui!)
+        const levels = [
+            {
+                // Fase 1: Mais fácil, plataformas seguras
+                platforms: [
+                    { x: 0, y: 330, width: 320, height: 50 },
+                    { x: 380, y: 330, width: 220, height: 50 },
+                    { x: 640, y: 330, width: 160, height: 50 },
+                    { x: 180, y: 230, width: 120, height: 16 },
+                    { x: 380, y: 170, width: 130, height: 16 },
+                    { x: 580, y: 220, width: 110, height: 16 }
+                ],
+                coins: [
+                    { x: 230, y: 190, collected: false },
+                    { x: 440, y: 130, collected: false },
+                    { x: 635, y: 180, collected: false }
+                ]
+            },
+            {
+                // Fase 2: Plataformas mais espaçadas e saltos maiores
+                platforms: [
+                    { x: 0, y: 330, width: 200, height: 50 },
+                    { x: 280, y: 270, width: 140, height: 16 },
+                    { x: 480, y: 210, width: 120, height: 16 },
+                    { x: 680, y: 330, width: 120, height: 50 },
+                    { x: 150, y: 160, width: 100, height: 16 }
+                ],
+                coins: [
+                    { x: 350, y: 230, collected: false },
+                    { x: 540, y: 170, collected: false },
+                    { x: 190, y: 120, collected: false },
+                    { x: 730, y: 290, collected: false }
+                ]
+            },
+            {
+                // Fase 3: Desafio mestre com abismos perigosos
+                platforms: [
+                    { x: 0, y: 330, width: 150, height: 50 },
+                    { x: 230, y: 260, width: 90, height: 16 },
+                    { x: 380, y: 190, width: 90, height: 16 },
+                    { x: 530, y: 260, width: 90, height: 16 },
+                    { x: 680, y: 330, width: 120, height: 50 }
+                ],
+                coins: [
+                    { x: 275, y: 220, collected: false },
+                    { x: 425, y: 150, collected: false },
+                    { x: 575, y: 220, collected: false }
+                ]
+            }
         ];
-        
-        let coins = [
-            { x: 230, y: 190, collected: false }, 
-            { x: 440, y: 130, collected: false },
-            { x: 635, y: 180, collected: false }
-        ];
+
+        let activePlatforms = [];
+        let activeCoins = [];
+
+        function loadLevel(levelIndex) {
+            const levelData = levels[levelIndex];
+            // Clona os objetos para resetar o estado das moedas ao reiniciar/mudar de fase
+            activePlatforms = JSON.parse(JSON.stringify(levelData.platforms));
+            activeCoins = JSON.parse(JSON.stringify(levelData.coins));
+            levelIndicator.textContent = levelIndex + 1;
+            mario.x = 50;
+            mario.y = 280;
+            mario.dy = 0;
+            mario.dx = 0;
+        }
 
         function pular() {
             if (isPlaying && mario.grounded) {
@@ -194,9 +232,10 @@
         }
 
         function startGame() {
-            score = 0; scoreEl.textContent = score;
-            mario.x = 50; mario.y = 280; mario.dy = 0; mario.dx = 0;
-            coins.forEach(c => c.collected = false);
+            score = 0;
+            currentLevel = 0;
+            scoreEl.textContent = score;
+            loadLevel(currentLevel);
             overlay.classList.add('hidden');
 
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
@@ -215,7 +254,8 @@
 
         function loop() {
             if (!isPlaying) return;
-            ctx.fillStyle = '#38BDF8'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#38BDF8'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             mario.dy += mario.gravity;
             mario.y += mario.dy;
@@ -225,7 +265,7 @@
             if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
 
             mario.grounded = false;
-            platforms.forEach(p => {
+            activePlatforms.forEach(p => {
                 if (mario.x < p.x + p.width && mario.x + mario.width > p.x &&
                     mario.y + mario.height >= p.y && mario.y + mario.height <= p.y + p.height + 10 && mario.dy >= 0) {
                     mario.y = p.y - mario.height;
@@ -234,28 +274,59 @@
                 }
             });
 
+            // Desenhar plataformas
             ctx.fillStyle = '#15803D';
-            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+            activePlatforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
 
-            coins.forEach(c => {
+            // Verificar moedas e vitória na fase
+            let allCollected = true;
+            activeCoins.forEach(c => {
                 if (!c.collected) {
+                    allCollected = false;
                     ctx.fillStyle = '#FACC15';
-                    ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); 
+                    ctx.arc(c.x, c.y, 9, 0, Math.PI * 2); 
+                    ctx.fill();
+
                     if (mario.x < c.x + 10 && mario.x + mario.width > c.x - 10 && mario.y < c.y + 10 && mario.y + mario.height > c.y - 10) {
-                        c.collected = true; score += 1; scoreEl.textContent = score;
+                        c.collected = true; 
+                        score += 1; 
+                        scoreEl.textContent = score;
                     }
                 }
             });
 
-            ctx.fillStyle = '#EF4444'; ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+            // Se coletou todas as moedas, avança de fase ou zera o jogo
+            if (allCollected) {
+                currentLevel++;
+                if (currentLevel < levels.length) {
+                    // Próxima fase
+                    loadLevel(currentLevel);
+                } else {
+                    // Zerou o jogo!
+                    isPlaying = false;
+                    mobileControls.classList.add('hidden');
+                    mobileControls.classList.remove('flex');
+                    overlayTitle.textContent = "Parabéns, Você Zera o Jogo! 🎉";
+                    overlayText.textContent = `Você completou todas as fases com ${score} moedas!`;
+                    startBtn.textContent = "Jogar Novamente";
+                    overlay.classList.remove('hidden');
+                    return;
+                }
+            }
 
+            // Desenhar Mario
+            ctx.fillStyle = '#EF4444'; 
+            ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+
+            // Game Over se cair no abismo
             if (mario.y > canvas.height) {
                 isPlaying = false;
                 mobileControls.classList.add('hidden');
                 mobileControls.classList.remove('flex');
                 overlayTitle.textContent = "Game Over!";
-                overlayText.textContent = `Você caiu no abismo! Moedas: ${score}`;
-                startBtn.textContent = "Jogar Novamente";
+                overlayText.textContent = `Você caiu no abismo na Fase ${currentLevel + 1}! Moedas: ${score}`;
+                startBtn.textContent = "Tentar Novamente";
                 overlay.classList.remove('hidden');
             } else {
                 animId = requestAnimationFrame(loop);
