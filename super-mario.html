@@ -53,7 +53,7 @@
         </div>
     </header>
 
-    <!-- Área Geral do Jogo Envolvida para Tela Cheia -->
+    <!-- Área Geral do Jogo Envolvida para Tela Cheia Global -->
     <div id="gameWrapper" class="w-full flex-1 flex flex-col bg-gray-950 overflow-hidden">
         
         <!-- Placar, Fase e Botão de Tela Cheia -->
@@ -66,7 +66,8 @@
                 <div>Moedas: <span id="score" class="text-yellow-400 font-bold">0</span></div>
             </div>
 
-            <button id="fullscreenBtn" class="bg-gray-800/90 hover:bg-gray-700 active:bg-gray-600 text-white px-2.5 py-1.5 rounded-lg shadow-md backdrop-blur-md border border-gray-700 transition-all cursor-pointer flex items-center gap-1 text-[11px] font-medium">
+            <!-- Botão de Tela Cheia Otimizado para Mobile -->
+            <button id="fullscreenBtn" class="bg-gray-800/90 hover:bg-gray-700 active:bg-gray-700 text-white px-2.5 py-1.5 rounded-lg shadow-md backdrop-blur-md border border-gray-700 transition-all cursor-pointer flex items-center gap-1 text-[11px] font-medium select-none">
                 <i id="fullscreenIcon" class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Tela Cheia</span>
             </button>
         </div>
@@ -75,17 +76,17 @@
         <main class="w-full flex-1 flex items-center justify-center my-0.5 px-1 relative">
             <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-lg shadow-xl border border-gray-800 max-w-full h-[40vh] sm:h-[58vh] object-contain"></canvas>
             
-            <!-- Overlay de Início / Game Over / Vitória -->
+            <!-- Overlay de Início / Game Over / Vitória de Fase -->
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-lg m-1">
                 <h2 id="overlayTitle" class="text-lg sm:text-2xl font-extrabold mb-1 tracking-wide text-center">Super Mariio Bros</h2>
-                <p id="overlayText" class="text-[10px] sm:text-xs text-gray-300 mb-2 max-w-sm text-center px-4">Colete todas as moedas para passar de fase!</p>
+                <p id="overlayText" class="text-[10px] sm:text-xs text-gray-300 mb-2 max-w-sm text-center px-4">Chegue até a bandeira para passar de fase!</p>
                 <button id="startBtn" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-lg shadow-xl transition-all cursor-pointer z-40 text-xs">
                     Iniciar Jogo
                 </button>
             </div>
         </main>
 
-        <!-- Controles Touch -->
+        <!-- Controles Touch Compactos e Perfeitamente Ajustados -->
         <div id="mobileControls" class="w-full max-w-3xl mx-auto hidden items-center justify-between px-3 pb-2 z-10 shrink-0">
             <div class="flex gap-2">
                 <button id="btnLeft" class="w-12 h-12 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
@@ -115,25 +116,31 @@
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
 
-        // Tela Cheia
+        // Gerenciamento Robusto de Tela Cheia
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
         const gameWrapper = document.getElementById('gameWrapper');
 
-        fullscreenBtn.addEventListener('click', () => {
+        fullscreenBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             const doc = document;
             const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
             if (!isFullscreen) {
-                if (gameWrapper.requestFullscreen) gameWrapper.requestFullscreen();
-                else if (gameWrapper.webkitRequestFullscreen) gameWrapper.webkitRequestFullscreen();
+                const requestMethod = gameWrapper.requestFullscreen || gameWrapper.webkitRequestFullscreen || gameWrapper.msRequestFullscreen;
+                if (requestMethod) {
+                    requestMethod.call(gameWrapper).catch(err => console.log(err));
+                }
             } else {
-                if (doc.exitFullscreen) doc.exitFullscreen();
-                else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+                const exitMethod = doc.exitFullscreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+                if (exitMethod) {
+                    exitMethod.call(doc).catch(err => console.log(err));
+                }
             }
         });
 
         function updateFullscreenIcon() {
-            const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+            const isFull = document.documentElement.fullscreenElement || document.fullscreenElement || document.webkitFullscreenElement;
             if (isFull) {
                 fullscreenIcon.classList.replace('fa-expand', 'fa-compress');
                 fullscreenBtn.querySelector('span').textContent = 'Restaurar';
@@ -142,6 +149,7 @@
                 fullscreenBtn.querySelector('span').textContent = 'Tela Cheia';
             }
         }
+
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
 
@@ -155,13 +163,14 @@
         const startBtn = document.getElementById('startBtn');
         const mobileControls = document.getElementById('mobileControls');
 
-        let score = 0, currentLevel = 0, isPlaying = false, animId;
+        let score = 0, currentLevel = 0, isPlaying = false, animId, gameState = 'START'; 
+        // gameState pode ser: 'START', 'PLAYING', 'LEVEL_COMPLETE', 'GAME_OVER', 'VICTORY'
+
         let mario = { x: 50, y: 280, width: 22, height: 28, dx: 0, dy: 0, gravity: 0.5, jumpPower: -10, grounded: false };
 
-        // BANCO DE FASES (Você pode adicionar quantas fases quiser aqui!)
+        // BANCO DE FASES COM AS BANDEIRAS DE FINAL DE FASE
         const levels = [
             {
-                // Fase 1: Mais fácil, plataformas seguras
                 platforms: [
                     { x: 0, y: 330, width: 320, height: 50 },
                     { x: 380, y: 330, width: 220, height: 50 },
@@ -174,10 +183,10 @@
                     { x: 230, y: 190, collected: false },
                     { x: 440, y: 130, collected: false },
                     { x: 635, y: 180, collected: false }
-                ]
+                ],
+                flag: { x: 740, y: 260, width: 12, height: 70 } // Posição da bandeira na fase 1
             },
             {
-                // Fase 2: Plataformas mais espaçadas e saltos maiores
                 platforms: [
                     { x: 0, y: 330, width: 200, height: 50 },
                     { x: 280, y: 270, width: 140, height: 16 },
@@ -188,12 +197,11 @@
                 coins: [
                     { x: 350, y: 230, collected: false },
                     { x: 540, y: 170, collected: false },
-                    { x: 190, y: 120, collected: false },
-                    { x: 730, y: 290, collected: false }
-                ]
+                    { x: 190, y: 120, collected: false }
+                ],
+                flag: { x: 730, y: 260, width: 12, height: 70 } // Posição da bandeira na fase 2
             },
             {
-                // Fase 3: Desafio mestre com abismos perigosos
                 platforms: [
                     { x: 0, y: 330, width: 150, height: 50 },
                     { x: 230, y: 260, width: 90, height: 16 },
@@ -205,18 +213,20 @@
                     { x: 275, y: 220, collected: false },
                     { x: 425, y: 150, collected: false },
                     { x: 575, y: 220, collected: false }
-                ]
+                ],
+                flag: { x: 735, y: 260, width: 12, height: 70 } // Posição da bandeira na fase 3
             }
         ];
 
         let activePlatforms = [];
         let activeCoins = [];
+        let activeFlag = null;
 
         function loadLevel(levelIndex) {
             const levelData = levels[levelIndex];
-            // Clona os objetos para resetar o estado das moedas ao reiniciar/mudar de fase
             activePlatforms = JSON.parse(JSON.stringify(levelData.platforms));
             activeCoins = JSON.parse(JSON.stringify(levelData.coins));
+            activeFlag = JSON.parse(JSON.stringify(levelData.flag));
             levelIndicator.textContent = levelIndex + 1;
             mario.x = 50;
             mario.y = 280;
@@ -231,13 +241,25 @@
             }
         }
 
-        function startGame() {
-            score = 0;
-            currentLevel = 0;
-            scoreEl.textContent = score;
-            loadLevel(currentLevel);
-            overlay.classList.add('hidden');
+        function handleMainButtonClick() {
+            if (gameState === 'START' || gameState === 'GAME_OVER' || gameState === 'VICTORY') {
+                // Iniciar do zero
+                score = 0;
+                currentLevel = 0;
+                scoreEl.textContent = score;
+                loadLevel(currentLevel);
+                overlay.classList.add('hidden');
+                startPlaying();
+            } else if (gameState === 'LEVEL_COMPLETE') {
+                // Avançar para a próxima fase ao clicar em Continuar
+                currentLevel++;
+                loadLevel(currentLevel);
+                overlay.classList.add('hidden');
+                startPlaying();
+            }
+        }
 
+        function startPlaying() {
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
             if (isMobileDevice) {
                 mobileControls.classList.remove('hidden');
@@ -246,8 +268,8 @@
                 mobileControls.classList.add('hidden');
                 mobileControls.classList.remove('flex');
             }
-
             isPlaying = true;
+            gameState = 'PLAYING';
             if (animId) cancelAnimationFrame(animId);
             loop();
         }
@@ -278,11 +300,48 @@
             ctx.fillStyle = '#15803D';
             activePlatforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
 
-            // Verificar moedas e vitória na fase
-            let allCollected = true;
+            // Desenhar Bandeira de Chegada
+            if (activeFlag) {
+                // Haste da bandeira
+                ctx.fillStyle = '#9CA3AF';
+                ctx.fillRect(activeFlag.x, activeFlag.y, 4, activeFlag.height);
+                // Pano da bandeira
+                ctx.fillStyle = '#DC2626';
+                ctx.beginPath();
+                ctx.moveTo(activeFlag.x + 4, activeFlag.y);
+                ctx.lineTo(activeFlag.x + 25, activeFlag.y + 12);
+                ctx.lineTo(activeFlag.x + 4, activeFlag.y + 24);
+                ctx.fill();
+
+                // Colisão do Mario com a bandeira
+                if (mario.x < activeFlag.x + activeFlag.width && mario.x + mario.width > activeFlag.x &&
+                    mario.y < activeFlag.y + activeFlag.height && mario.y + mario.height > activeFlag.y) {
+                    
+                    isPlaying = false;
+                    mobileControls.classList.add('hidden');
+                    mobileControls.classList.remove('flex');
+
+                    if (currentLevel + 1 < levels.length) {
+                        // Passou de fase
+                        gameState = 'LEVEL_COMPLETE';
+                        overlayTitle.textContent = `Parabéns! Você completou a fase ${currentLevel + 1}`;
+                        overlayText.textContent = `Moedas atuais: ${score}. Prepare-se para a próxima fase!`;
+                        startBtn.textContent = "Continuar";
+                    } else {
+                        // Zerou o jogo inteiro!
+                        gameState = 'VICTORY';
+                        overlayTitle.textContent = "🏆 Você completou todas as fases!";
+                        overlayText.textContent = `Parabéns! Pontuação final: ${score} moedas.`;
+                        startBtn.textContent = "Jogar Novamente";
+                    }
+                    overlay.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            // Moedas
             activeCoins.forEach(c => {
                 if (!c.collected) {
-                    allCollected = false;
                     ctx.fillStyle = '#FACC15';
                     ctx.beginPath(); 
                     ctx.arc(c.x, c.y, 9, 0, Math.PI * 2); 
@@ -296,25 +355,6 @@
                 }
             });
 
-            // Se coletou todas as moedas, avança de fase ou zera o jogo
-            if (allCollected) {
-                currentLevel++;
-                if (currentLevel < levels.length) {
-                    // Próxima fase
-                    loadLevel(currentLevel);
-                } else {
-                    // Zerou o jogo!
-                    isPlaying = false;
-                    mobileControls.classList.add('hidden');
-                    mobileControls.classList.remove('flex');
-                    overlayTitle.textContent = "Parabéns, Você Zera o Jogo! 🎉";
-                    overlayText.textContent = `Você completou todas as fases com ${score} moedas!`;
-                    startBtn.textContent = "Jogar Novamente";
-                    overlay.classList.remove('hidden');
-                    return;
-                }
-            }
-
             // Desenhar Mario
             ctx.fillStyle = '#EF4444'; 
             ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
@@ -322,6 +362,7 @@
             // Game Over se cair no abismo
             if (mario.y > canvas.height) {
                 isPlaying = false;
+                gameState = 'GAME_OVER';
                 mobileControls.classList.add('hidden');
                 mobileControls.classList.remove('flex');
                 overlayTitle.textContent = "Game Over!";
@@ -367,7 +408,7 @@
 
         const triggerStart = (e) => {
             e.preventDefault();
-            startGame();
+            handleMainButtonClick();
         };
 
         startBtn.addEventListener('click', triggerStart);
