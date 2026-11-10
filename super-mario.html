@@ -54,27 +54,27 @@
         </div>
     </header>
 
-    <!-- Área do Jogo Compacta -->
-    <main id="gameMain" class="w-full flex-1 flex flex-col items-center justify-between py-1 px-2 relative overflow-hidden">
+    <!-- Área Geral do Jogo Envolvida para Tela Cheia Global -->
+    <div id="gameWrapper" class="w-full flex-1 flex flex-col bg-gray-950 overflow-hidden">
         
         <!-- Placar e Botão de Tela Cheia Compactos no Topo -->
-        <div class="w-full max-w-3xl flex items-center justify-between px-2 z-20">
-            <div class="bg-gray-900/90 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-gray-800 shadow-md flex items-center gap-2 text-white text-[11px]">
+        <div class="w-full max-w-3xl mx-auto flex items-center justify-between px-2 pt-2 z-20">
+            <div class="bg-gray-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-gray-800 shadow-md flex items-center gap-2 text-white text-[11px]">
                 <div class="flex items-center gap-1 font-bold text-red-500">
                     <i class="fa-solid fa-m"></i> <span>Mario</span>
                 </div>
                 <div>Moedas: <span id="score" class="text-yellow-400 font-bold">0</span></div>
             </div>
 
-            <!-- Botão de Tela Cheia -->
-            <button id="fullscreenBtn" class="bg-gray-800/90 hover:bg-gray-700 active:bg-gray-600 text-white px-2.5 py-1 rounded-lg shadow-md backdrop-blur-md border border-gray-700 transition-all cursor-pointer flex items-center gap-1 text-[11px] font-medium">
+            <!-- Botão de Tela Cheia Corrigido -->
+            <button id="fullscreenBtn" class="bg-gray-800/90 hover:bg-gray-700 active:bg-gray-600 text-white px-2.5 py-1.5 rounded-lg shadow-md backdrop-blur-md border border-gray-700 transition-all cursor-pointer flex items-center gap-1 text-[11px] font-medium">
                 <i id="fullscreenIcon" class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Tela Cheia</span>
             </button>
         </div>
 
-        <!-- Canvas Reduzido para Garantir Espaço aos Botões -->
-        <div class="relative w-full flex-1 flex items-center justify-center my-0.5 px-1">
-            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-lg shadow-xl border border-gray-800 max-w-full h-[42vh] sm:h-[60vh] object-contain"></canvas>
+        <!-- Canvas do Jogo -->
+        <main class="w-full flex-1 flex items-center justify-center my-0.5 px-1 relative">
+            <canvas id="gameCanvas" width="800" height="380" class="bg-sky-400 rounded-lg shadow-xl border border-gray-800 max-w-full h-[40vh] sm:h-[58vh] object-contain"></canvas>
             
             <!-- Overlay de Início / Game Over -->
             <div id="gameOverlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 rounded-lg m-1">
@@ -84,26 +84,26 @@
                     Iniciar Jogo
                 </button>
             </div>
-        </div>
+        </main>
 
-        <!-- Controles Touch Compactos e Afastados das Bordas -->
-        <div id="mobileControls" class="w-full max-w-3xl hidden items-center justify-between px-3 pb-1 z-10 shrink-0">
+        <!-- Controles Touch Compactos e Perfeitamente Ajustados -->
+        <div id="mobileControls" class="w-full max-w-3xl mx-auto hidden items-center justify-between px-3 pb-2 z-10 shrink-0">
             <div class="flex gap-2">
-                <button id="btnLeft" class="w-11 h-11 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
+                <button id="btnLeft" class="w-12 h-12 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <button id="btnRight" class="w-11 h-11 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
+                <button id="btnRight" class="w-12 h-12 bg-gray-800/90 active:bg-red-600 text-white rounded-xl flex items-center justify-center text-sm border border-gray-700 shadow-md">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
             <div class="flex items-center justify-center">
-                <button id="btnJump" class="w-12 h-12 bg-red-600/95 active:bg-red-500 border border-red-400 text-white rounded-full shadow-md flex flex-col items-center justify-center font-bold tracking-wider">
+                <button id="btnJump" class="w-13 h-13 bg-red-600/95 active:bg-red-500 border border-red-400 text-white rounded-full shadow-md flex flex-col items-center justify-center font-bold tracking-wider px-3 py-2">
                     <i class="fa-solid fa-arrow-up text-xs mb-0.5"></i>
                     <span class="text-[7px]">PULAR</span>
                 </button>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
         const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -116,32 +116,36 @@
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
 
-        // Gerenciamento do Botão de Tela Cheia
+        // Gerenciamento Robusto de Tela Cheia (Funciona em PC e Dispositivos Móveis Compatíveis)
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
-        const gameMain = document.getElementById('gameMain');
+        const gameWrapper = document.getElementById('gameWrapper');
 
         fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (gameMain.requestFullscreen) {
-                    gameMain.requestFullscreen();
-                } else if (gameMain.webkitRequestFullscreen) {
-                    gameMain.webkitRequestFullscreen();
+            const doc = document;
+            const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+            if (!isFullscreen) {
+                if (gameWrapper.requestFullscreen) {
+                    gameWrapper.requestFullscreen().catch(err => console.log(err));
+                } else if (gameWrapper.webkitRequestFullscreen) {
+                    gameWrapper.webkitRequestFullscreen();
+                } else if (gameWrapper.msRequestFullscreen) {
+                    gameWrapper.msRequestFullscreen();
                 }
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
+                if (doc.exitFullscreen) {
+                    doc.exitFullscreen();
+                } else if (doc.webkitExitFullscreen) {
+                    doc.webkitExitFullscreen();
+                } else if (doc.msExitFullscreen) {
+                    doc.msExitFullscreen();
                 }
             }
         });
 
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
-
         function updateFullscreenIcon() {
-            const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+            const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             if (isFull) {
                 fullscreenIcon.classList.replace('fa-expand', 'fa-compress');
                 fullscreenBtn.querySelector('span').textContent = 'Restaurar';
@@ -150,6 +154,10 @@
                 fullscreenBtn.querySelector('span').textContent = 'Tela Cheia';
             }
         }
+
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('msfullscreenchange', updateFullscreenIcon);
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -275,6 +283,7 @@
             el.addEventListener('pointerdown', (e) => { e.preventDefault(); onDown(); });
             el.addEventListener('pointerup', (e) => { e.preventDefault(); onUp(); });
             el.addEventListener('pointerleave', (e) => { e.preventDefault(); onUp(); });
+            el.addEventListener('pointercancel', (e) => { e.preventDefault(); onUp(); });
         }
 
         setupPointerButton('btnLeft', () => mario.dx = -4, () => { if(mario.dx < 0) mario.dx = 0; });
