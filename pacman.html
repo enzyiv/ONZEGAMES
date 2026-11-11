@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man - Meu Site</title>
+    <title>Pac-Man Deluxe - Meu Site</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
@@ -20,35 +20,46 @@
                 <button id="themeToggleBtn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <i id="themeIcon" class="fa-solid fa-sun text-xl"></i>
                 </button>
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pac-Man</span>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pac-Man Deluxe</span>
             </div>
         </div>
     </header>
 
     <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 w-full text-center">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 font-bold text-lg">
-                    <i class="fa-solid fa-ghost"></i> Pac-Man
+            
+            <!-- Painel de Status -->
+            <div class="grid grid-cols-3 gap-2 mb-4 items-center">
+                <div class="text-left bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    Fase: <span id="level" class="text-yellow-500 font-bold">1</span>
                 </div>
-                <div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-100">
+                <div class="text-center bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-100">
                     Pontos: <span id="score">0</span>
                 </div>
+                <div class="text-right bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    Vidas: <span id="lives" class="text-red-500">❤️❤️❤️</span>
+                </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">Use as **setas do teclado** para guiar o Pac-Man e comer as bolinhas!</p>
+
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Use as **setas do teclado** para guiar o Pac-Man. Coma as pílulas grandes para assustar os fantasmas!</p>
             
+            <!-- Área do Jogo -->
             <div class="relative w-full flex justify-center bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
-                <canvas id="gameCanvas" width="400" height="400" class="bg-black rounded-xl max-w-full h-auto shadow-md"></canvas>
-                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white">
-                    <h2 class="text-2xl font-bold mb-2">Pac-Man Clássico</h2>
-                    <p class="text-sm text-gray-300 mb-6">Coma todas as pastilhas para vencer!</p>
-                    <button id="startBtn" class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 font-medium rounded-xl shadow-lg transition-all text-black font-bold">Iniciar Jogo</button>
+                <canvas id="gameCanvas" width="440" height="480" class="bg-black rounded-xl max-w-full h-auto shadow-md"></canvas>
+                
+                <!-- Menu / Overlays -->
+                <div id="gameOverlay" class="absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white p-6 z-10">
+                    <div class="text-yellow-400 text-4xl mb-2"><i class="fa-solid fa-ghost"></i></div>
+                    <h2 id="overlayTitle" class="text-3xl font-black mb-2 tracking-wider">PAC-MAN DELUXE</h2>
+                    <p id="overlayDesc" class="text-sm text-gray-300 mb-6 text-center max-w-xs">Encare os 4 fantasmas clássicos em labirintos desafiadores com pixel art autêntico.</p>
+                    <button id="startBtn" class="px-8 py-3.5 bg-yellow-500 hover:bg-yellow-400 font-black rounded-xl shadow-lg transition-all text-black text-lg tracking-wide transform hover:scale-105">INICIAR JOGO</button>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
+        // Tema Dark/Light
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIcon = document.getElementById('themeIcon');
         const htmlElement = document.documentElement;
@@ -59,84 +70,336 @@
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
 
+        // Configurações do Jogo & Canvas
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const levelEl = document.getElementById('level');
         const overlay = document.getElementById('gameOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayDesc = document.getElementById('overlayDesc');
         const startBtn = document.getElementById('startBtn');
 
-        let score = 0, isPlaying = false, animId;
-        let pacman = { x: 200, y: 200, size: 14, dx: 0, dy: 0, speed: 2 };
-        let dots = [];
+        const TILE_SIZE = 20; // 22 colunas x 24 linhas = 440 x 480 px
 
-        function initDots() {
-            dots = [];
-            for (let x = 30; x < canvas.width; x += 35) {
-                for (let y = 30; y < canvas.height; y += 35) {
-                    dots.push({ x, y, eaten: false });
-                }
-            }
+        // 1 = Parede, 0 = Ponto normal, 2 = Vazio, 3 = Power Pellet (Pílula de poder)
+        const mapTemplate = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,3,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,3,1],
+            [1,0,1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,0,1],
+            [1,0,1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,2,2,2,2,2,2,1,1,1,0,1,1,1,1],
+            [2,2,2,1,0,1,2,2,2,2,2,2,2,2,2,2,1,0,1,2,2,2],
+            [1,1,1,1,0,1,2,1,1,1,2,2,1,1,1,2,1,0,1,1,1,1],
+            [2,2,2,2,0,2,2,1,2,2,2,2,2,2,1,2,2,0,2,2,2,2],
+            [1,1,1,1,0,1,2,1,1,1,1,1,1,1,1,2,1,0,1,1,1,1],
+            [2,2,2,1,0,1,2,2,2,2,2,2,2,2,2,2,1,0,1,2,2,2],
+            [1,1,1,1,0,1,2,1,1,1,1,1,1,1,1,2,1,0,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,0,1],
+            [1,3,0,1,0,0,0,0,0,0,2,2,0,0,0,0,0,0,1,0,3,1],
+            [1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let map = [];
+        let score = 0, lives = 3, level = 1, isPlaying = false, animId;
+        let frightenTimer = 0;
+
+        let pacman = {
+            x: 10.5 * TILE_SIZE,
+            y: 16 * TILE_SIZE,
+            speed: 2,
+            dx: 0,
+            dy: 0,
+            nextDx: 0,
+            nextDy: 0,
+            radius: TILE_SIZE / 2 - 2,
+            angle: 0
+        };
+
+        // 4 Fantasmas Clássicos (Blinky, Pinky, Inky, Clyde)
+        let ghosts = [
+            { name: 'Blinky', x: 10 * TILE_SIZE, y: 10 * TILE_SIZE, color: '#EF4444', speed: 1.5, dx: 0, dy: -1.5, homeX: 10 * TILE_SIZE, homeY: 10 * TILE_SIZE },
+            { name: 'Pinky',  x: 9 * TILE_SIZE,  y: 10 * TILE_SIZE, color: '#EC4899', speed: 1.5, dx: 1.5, dy: 0,  homeX: 9 * TILE_SIZE,  homeY: 10 * TILE_SIZE },
+            { name: 'Inky',   x: 11 * TILE_SIZE, y: 10 * TILE_SIZE, color: '#06B6D4', speed: 1.5, dx: -1.5, dy: 0, homeX: 11 * TILE_SIZE, homeY: 10 * TILE_SIZE },
+            { name: 'Clyde',  x: 10 * TILE_SIZE, y: 11 * TILE_SIZE, color: '#F97316', speed: 1.5, dx: 0, dy: 1.5, homeX: 10 * TILE_SIZE, homeY: 11 * TILE_SIZE }
+        ];
+
+        function initLevel() {
+            map = JSON.parse(JSON.stringify(mapTemplate));
+            resetPositions();
+        }
+
+        function resetPositions() {
+            pacman.x = 10.5 * TILE_SIZE;
+            pacman.y = 16 * TILE_SIZE;
+            pacman.dx = 0; pacman.dy = 0;
+            pacman.nextDx = 0; pacman.nextDy = 0;
+
+            ghosts.forEach(g => {
+                g.x = g.homeX;
+                g.y = g.homeY;
+                g.dx = 0;
+                g.dy = -1.5;
+            });
+            frightenTimer = 0;
         }
 
         function startGame() {
-            score = 0; scoreEl.textContent = score;
-            pacman.x = 200; pacman.y = 200; pacman.dx = 0; pacman.dy = 0;
-            initDots();
+            score = 0;
+            lives = 3;
+            level = 1;
+            scoreEl.textContent = score;
+            livesEl.textContent = "❤️❤️❤️";
+            levelEl.textContent = level;
+            initLevel();
             overlay.classList.add('hidden');
             isPlaying = true;
             loop();
         }
 
+        function nextLevel() {
+            level++;
+            levelEl.textContent = level;
+            initLevel();
+            // Aumenta levemente a velocidade dos fantasmas a cada fase
+            ghosts.forEach(g => g.speed = Math.min(2.5, 1.5 + (level - 1) * 0.15));
+            isPlaying = true;
+            loop();
+        }
+
+        // Colisão com paredes baseada em grades (grid)
+        function checkWallCollision(x, y, radius, dx, dy) {
+            let nextX = x + dx;
+            let nextY = y + dy;
+
+            // Túnel lateral
+            if (nextX < 0) return false;
+            if (nextX > canvas.width) return false;
+
+            // Checar os 4 cantos do bounding box do personagem
+            let points = [
+                {x: nextX - radius + 2, y: nextY - radius + 2},
+                {x: nextX + radius - 2, y: nextY - radius + 2},
+                {x: nextX - radius + 2, y: nextY + radius - 2},
+                {x: nextX + radius - 2, y: nextY + radius - 2}
+            ];
+
+            for (let p of points) {
+                let c = Math.floor(p.x / TILE_SIZE);
+                let r = Math.floor(p.y / TILE_SIZE);
+                if (r < 0 || r >= map.length || c < 0 || c >= map[0].length) continue;
+                if (map[r][c] === 1) return true;
+            }
+            return false;
+        }
+
         function loop() {
             if (!isPlaying) return;
-            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            pacman.x += pacman.dx;
-            pacman.y += pacman.dy;
+            // Limpar tela
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (pacman.x < 15) pacman.x = canvas.width - 15;
-            if (pacman.x > canvas.width - 15) pacman.x = 15;
-            if (pacman.y < 15) pacman.y = canvas.height - 15;
-            if (pacman.y > canvas.height - 15) pacman.y = 15;
+            // Reduzir timer de susto dos fantasmas
+            if (frightenTimer > 0) frightenTimer--;
 
-            // Desenhar Pastilhas
-            let remaining = false;
-            dots.forEach(d => {
-                if (!d.eaten) {
-                    remaining = true;
-                    ctx.fillStyle = '#FDE047';
-                    ctx.beginPath(); ctx.arc(d.x, d.y, 4, 0, Math.PI * 2); ctx.fill();
+            // --- 1. ATUALIZAR PAC-MAN ---
+            // Tentar aplicar mudança de direção antecipada (Cornering)
+            if (pacman.nextDx !== 0 || pacman.nextDy !== 0) {
+                if (!checkWallCollision(pacman.x, pacman.y, pacman.radius, pacman.nextDx * 2, pacman.nextDy * 2)) {
+                    pacman.dx = pacman.nextDx;
+                    pacman.dy = pacman.nextDy;
+                }
+            }
 
-                    let dist = Math.hypot(pacman.x - d.x, pacman.y - d.y);
-                    if (dist < 15) {
-                        d.eaten = true; score += 10; scoreEl.textContent = score;
+            // Mover Pac-Man se não houver parede
+            if (!checkWallCollision(pacman.x, pacman.y, pacman.radius, pacman.dx, pacman.dy)) {
+                pacman.x += pacman.dx;
+                pacman.y += pacman.dy;
+            }
+
+            // Túnel Teleporte Lateral
+            if (pacman.x < -10) pacman.x = canvas.width + 10;
+            if (pacman.x > canvas.width + 10) pacman.x = -10;
+
+            // Ângulo da boca do Pac-Man
+            if (pacman.dx > 0) pacman.angle = 0;
+            if (pacman.dx < 0) pacman.angle = Math.PI;
+            if (pacman.dy > 0) pacman.angle = 0.5 * Math.PI;
+            if (pacman.dy < 0) pacman.angle = 1.5 * Math.PI;
+
+            // --- 2. DESENHAR LABIRINTO & COMER BOLINHAS ---
+            let dotsRemaining = false;
+            for (let r = 0; r < map.length; r++) {
+                for (let c = 0; c < map[r].length; c++) {
+                    let posX = c * TILE_SIZE;
+                    let posY = r * TILE_SIZE;
+
+                    if (map[r][c] === 1) {
+                        // Desenhar parede com visual elegante
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.fillRect(posX, posY, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = '#3b82f6';
+                        ctx.strokeRect(posX, posY, TILE_SIZE, TILE_SIZE);
+                    } else if (map[r][c] === 0) {
+                        dotsRemaining = true;
+                        ctx.fillStyle = '#FDE047';
+                        ctx.beginPath();
+                        ctx.arc(posX + TILE_SIZE/2, posY + TILE_SIZE/2, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Comer bolinha normal
+                        let dist = Math.hypot(pacman.x - (posX + TILE_SIZE/2), pacman.y - (posY + TILE_SIZE/2));
+                        if (dist < TILE_SIZE / 2) {
+                            map[r][c] = 2;
+                            score += 10;
+                            scoreEl.textContent = score;
+                        }
+                    } else if (map[r][c] === 3) {
+                        dotsRemaining = true;
+                        // Pílula de poder piscando
+                        if (Math.floor(Date.now() / 200) % 2 === 0) {
+                            ctx.fillStyle = '#F43F5E';
+                            ctx.beginPath();
+                            ctx.arc(posX + TILE_SIZE/2, posY + TILE_SIZE/2, 7, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // Comer Pílula Poderosa
+                        let dist = Math.hypot(pacman.x - (posX + TILE_SIZE/2), pacman.y - (posY + TILE_SIZE/2));
+                        if (dist < TILE_SIZE / 2) {
+                            map[r][c] = 2;
+                            score += 50;
+                            scoreEl.textContent = score;
+                            frightenTimer = 400; // ~6 segundos de fantasmas vulneráveis
+                        }
+                    }
+                }
+            }
+
+            // --- 3. DESENHAR PAC-MAN ---
+            ctx.fillStyle = '#EAB308';
+            ctx.beginPath();
+            let mouthAnim = Math.abs(Math.sin(Date.now() / 80)) * 0.35 + 0.05;
+            ctx.arc(pacman.x, pacman.y, pacman.radius, pacman.angle + mouthAnim, pacman.angle + Math.PI * 2 - mouthAnim);
+            ctx.lineTo(pacman.x, pacman.y);
+            ctx.fill();
+
+            // --- 4. ATUALIZAR E DESENHAR FANTASMAS (PIXEL ART) ---
+            ghosts.forEach(g => {
+                // Inteligência simples de movimento em cruzamentos
+                if (checkWallCollision(g.x, g.y, 8, g.dx, g.dy) || Math.random() < 0.03) {
+                    let dirs = [
+                        {dx: g.speed, dy: 0}, {dx: -g.speed, dy: 0},
+                        {dx: 0, dy: g.speed}, {dx: 0, dy: -g.speed}
+                    ];
+                    // Filtrar direções que não batem em parede imediata
+                    let validDirs = dirs.filter(d => !checkWallCollision(g.x, g.y, 8, d.dx * 2, d.dy * 2));
+                    if (validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.dx = chosen.dx;
+                        g.dy = chosen.dy;
+                    } else {
+                        g.dx *= -1;
+                        g.dy *= -1;
+                    }
+                }
+
+                g.x += g.dx;
+                g.y += g.dy;
+
+                // Desenhar Fantasma em Pixel Art Procedural
+                let gx = Math.round(g.x - TILE_SIZE/2);
+                let gy = Math.round(g.y - TILE_SIZE/2);
+                let ghostColor = frightenTimer > 0 ? (frightenTimer < 100 && Math.floor(Date.now() / 150) % 2 === 0 ? '#FFFFFF' : '#1D4ED8') : g.color;
+
+                // Corpo do fantasma
+                ctx.fillStyle = ghostColor;
+                ctx.beginPath();
+                ctx.arc(gx + 10, gy + 10, 9, Math.PI, 0, false);
+                ctx.lineTo(gx + 19, gy + 20);
+                ctx.lineTo(gx + 14, gy + 17);
+                ctx.lineTo(gx + 10, gy + 20);
+                ctx.lineTo(gx + 6, gy + 17);
+                ctx.lineTo(gx + 1, gy + 20);
+                ctx.closePath();
+                ctx.fill();
+
+                // Olhinhos em pixel art
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(gx + 5, gy + 7, 4, 6);
+                ctx.fillRect(gx + 11, gy + 7, 4, 6);
+
+                let pupilaColor = frightenTimer > 0 ? '#F43F5E' : '#000000';
+                ctx.fillStyle = pupilaColor;
+                let pDx = g.dx > 0 ? 1 : (g.dx < 0 ? -1 : 0);
+                let pDy = g.dy > 0 ? 1 : (g.dy < 0 ? -1 : 0);
+                ctx.fillRect(gx + 6 + pDx, gy + 9 + pDy, 2, 3);
+                ctx.fillRect(gx + 12 + pDx, gy + 9 + pDy, 2, 3);
+
+                // Colisão Pac-Man <-> Fantasma
+                let ghostDist = Math.hypot(pacman.x - g.x, pacman.y - g.y);
+                if (ghostDist < 16) {
+                    if (frightenTimer > 0) {
+                        // Comer fantasma
+                        score += 200;
+                        scoreEl.textContent = score;
+                        g.x = g.homeX;
+                        g.y = g.homeY;
+                    } else {
+                        // Perder vida
+                        lives--;
+                        livesEl.textContent = "❤️".repeat(lives);
+                        if (lives <= 0) {
+                            isPlaying = false;
+                            overlayTitle.textContent = "GAME OVER";
+                            overlayDesc.textContent = `Você pontuou ${score} pontos na fase ${level}.`;
+                            startBtn.textContent = "JOGAR NOVAMENTE";
+                            overlay.classList.remove('hidden');
+                        } else {
+                            resetPositions();
+                        }
                     }
                 }
             });
 
-            // Desenhar Pacman
-            ctx.fillStyle = '#EAB308';
-            ctx.beginPath(); ctx.arc(pacman.x, pacman.y, pacman.size, 0.2 * Math.PI, 1.8 * Math.PI);
-            ctx.lineTo(pacman.x, pacman.y); ctx.fill();
-
-            if (!remaining) {
+            // Verificar Vitória de Fase
+            if (!dotsRemaining) {
                 isPlaying = false;
-                overlay.querySelector('h2').textContent = "Você Venceu!";
-                overlay.querySelector('p').textContent = `Pontuação máxima: ${score}`;
-                startBtn.textContent = "Jogar Novamente";
+                overlayTitle.textContent = `FASE ${level} CONCLUÍDA!`;
+                overlayDesc.textContent = `Parabéns! Prepare-se para a fase ${level + 1}.`;
+                startBtn.textContent = "PRÓXIMA FASE";
                 overlay.classList.remove('hidden');
-            } else {
+                startBtn.onclick = nextLevel;
+                return;
+            }
+
+            if (isPlaying) {
                 animId = requestAnimationFrame(loop);
             }
         }
 
+        // Controles do Teclado
         window.addEventListener('keydown', e => {
-            if (e.key === 'ArrowUp') { pacman.dx = 0; pacman.dy = -pacman.speed; }
-            if (e.key === 'ArrowDown') { pacman.dx = 0; pacman.dy = pacman.speed; }
-            if (e.key === 'ArrowLeft') { pacman.dx = -pacman.speed; pacman.dy = 0; }
-            if (e.key === 'ArrowRight') { pacman.dx = pacman.speed; pacman.dy = 0; }
+            if (e.key === 'ArrowUp') { pacman.nextDx = 0; pacman.nextDy = -pacman.speed; }
+            if (e.key === 'ArrowDown') { pacman.nextDx = 0; pacman.nextDy = pacman.speed; }
+            if (e.key === 'ArrowLeft') { pacman.nextDx = -pacman.speed; pacman.nextDy = 0; }
+            if (e.key === 'ArrowRight') { pacman.nextDx = pacman.speed; pacman.nextDy = 0; }
         });
-        startBtn.addEventListener('click', startGame);
+
+        startBtn.addEventListener('click', () => {
+            startBtn.onclick = startGame; // Restaura o botão padrão caso venha da vitória de fase
+            startGame();
+        });
     </script>
 </body>
 </html>
