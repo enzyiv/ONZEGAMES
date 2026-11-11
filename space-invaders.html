@@ -31,8 +31,8 @@
         
         <!-- Placar Flutuante -->
         <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-6 text-xs sm:text-sm pointer-events-none">
-            <div class="flex items-center gap-1 font-bold text-indigo-400">
-                <i class="fa-solid fa-rocket"></i> <span class="hidden sm:inline">Space</span>
+            <div class="font-bold text-indigo-400">
+                <span class="hidden sm:inline">Space</span> Invaders
             </div>
             <div>Level: <span id="level" class="text-yellow-400 font-bold">1</span></div>
             <div>Pontos: <span id="score" class="text-indigo-400 font-bold">0</span></div>
@@ -43,13 +43,13 @@
         <div class="relative w-full flex-1 flex items-center justify-center my-auto">
             <canvas id="gameCanvas" width="600" height="460" class="bg-black rounded-2xl shadow-2xl border border-gray-800 max-w-full max-h-[60vh] sm:max-h-[70vh] object-contain"></canvas>
             
-            <!-- Tela Inicial e Overlays do Jogo -->
-            <div id="gameOverlay" class="absolute inset-0 bg-black/75 backdrop-blur-md flex flex-col items-center justify-center z-30 rounded-2xl p-6">
+            <!-- Tela Inicial e Overlays do Jogo (Fundo semi-transparente para ver a gameplay rolando atrás) -->
+            <div id="gameOverlay" class="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center z-30 rounded-2xl p-6">
                 
                 <!-- Conteúdo do Menu Principal -->
-                <div id="mainMenu" class="flex flex-col items-center w-full max-w-xs">
+                <div id="mainMenu" class="flex flex-col items-center w-full max-w-xs bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h2 class="text-3xl font-extrabold mb-2 tracking-wide text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Space Invaders</h2>
-                    <p class="text-xs sm:text-sm text-gray-300 mb-8 text-center font-medium">Proteja a galáxia dos invasores alienígenas.</p>
+                    <p class="text-xs sm:text-sm text-gray-300 mb-6 text-center font-medium">Proteja a galáxia dos invasores alienígenas.</p>
                     
                     <div class="flex flex-col gap-3.5 w-full">
                         <button id="startBtn" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2">
@@ -61,8 +61,8 @@
                     </div>
                 </div>
 
-                <!-- Conteúdo do Menu de Opções (Oculto inicialmente) -->
-                <div id="optionsMenu" class="hidden flex-col items-center w-full max-w-xs bg-gray-900/90 p-5 rounded-2xl border border-gray-800">
+                <!-- Conteúdo do Menu de Opções -->
+                <div id="optionsMenu" class="hidden flex-col items-center w-full max-w-xs bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h3 class="text-xl font-bold mb-6 text-center text-indigo-400"><i class="fa-solid fa-gear mr-2"></i>Opções</h3>
                     
                     <div class="flex flex-col gap-4 w-full mb-6">
@@ -81,8 +81,8 @@
                     </button>
                 </div>
 
-                <!-- Conteúdo de Game Over / Vitória (Controlado via JS) -->
-                <div id="endGameScreen" class="hidden flex-col items-center w-full max-w-xs text-center bg-gray-900/90 p-5 rounded-2xl border border-gray-800">
+                <!-- Conteúdo de Game Over / Vitória -->
+                <div id="endGameScreen" class="hidden flex-col items-center w-full max-w-xs text-center bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold mb-3 tracking-wide">Game Over!</h2>
                     <p id="overlayText" class="text-xs sm:text-sm text-gray-300 mb-6">Pontuação final: 0</p>
                     <button id="restartBtn" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xl transition-all cursor-pointer">
@@ -93,9 +93,8 @@
             </div>
         </div>
 
-        <!-- Controles Touch para Celular (Começa oculto) -->
+        <!-- Controles Touch para Celular -->
         <div id="mobileControls" class="w-full max-w-md hidden items-center justify-between px-4 pb-2 z-10">
-            <!-- Direcional -->
             <div class="grid grid-cols-3 gap-1 w-36 h-36 bg-gray-900/60 p-2 rounded-2xl border border-gray-800 backdrop-blur-sm">
                 <div></div>
                 <button id="btnUp" class="bg-gray-800 active:bg-indigo-600 text-white rounded-xl flex items-center justify-center text-lg transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
@@ -108,7 +107,6 @@
                 <div></div>
             </div>
 
-            <!-- Botão de Tiro -->
             <div class="flex items-center justify-center">
                 <button id="btnShoot" class="w-24 h-24 bg-red-600/80 active:bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white rounded-full shadow-2xl flex flex-col items-center justify-center font-bold tracking-wider transition-all transform active:scale-95">
                     <i class="fa-solid fa-crosshairs text-xl mb-1"></i>
@@ -148,10 +146,10 @@
         const mobileControls = document.getElementById('mobileControls');
 
         let score = 0, lives = 3, level = 1, isPlaying = false, animationId = null;
+        let isDemoMode = true; // Flag para indicar que o jogo está rodando sozinho no fundo
         let showTouchControlsSetting = true;
         const pixelSize = 3;
 
-        // Gerenciamento de Telas do Menu
         optionsBtn.addEventListener('click', () => {
             mainMenu.classList.add('hidden');
             optionsMenu.classList.remove('hidden');
@@ -168,7 +166,6 @@
             showTouchControlsSetting = e.target.checked;
         });
 
-        // Pixel Arts para os 4 Tipos de Inimigos
         const alienArt1 = [
             [0,0,1,0,0,0,0,1,0,0],
             [0,0,0,1,0,0,1,0,0,0],
@@ -254,77 +251,45 @@
         function criarOndaAlienigena() {
             aliens = [];
             let rows = 3 + Math.min(level, 2);
-            
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < 8; c++) {
-                    let tipo = 1;
-                    let cor = '#22C55E';
-                    let hp = 1;
-
-                    if (level === 2) {
-                        tipo = r === 0 ? 2 : 1;
-                        cor = tipo === 2 ? '#A855F7' : '#22C55E';
-                    } else if (level === 3) {
-                        tipo = r === 0 ? 3 : (r === 1 ? 2 : 1);
-                        cor = tipo === 3 ? '#F97316' : (tipo === 2 ? '#A855F7' : '#22C55E');
-                    } else if (level >= 4) {
+                    let tipo = 1, cor = '#22C55E', hp = 1;
+                    if (level === 2) { tipo = r === 0 ? 2 : 1; cor = tipo === 2 ? '#A855F7' : '#22C55E'; }
+                    else if (level === 3) { tipo = r === 0 ? 3 : (r === 1 ? 2 : 1); cor = tipo === 3 ? '#F97316' : (tipo === 2 ? '#A855F7' : '#22C55E'); }
+                    else if (level >= 4) {
                         let tiposDisponiveis = [1, 2, 3, 4];
                         tipo = tiposDisponiveis[r % tiposDisponiveis.length];
-                        if (tipo === 1) cor = '#22C55E';
-                        if (tipo === 2) cor = '#A855F7';
-                        if (tipo === 3) cor = '#F97316';
-                        if (tipo === 4) cor = '#EAB308';
+                        if (tipo === 1) cor = '#22C55E'; if (tipo === 2) cor = '#A855F7';
+                        if (tipo === 3) cor = '#F97316'; if (tipo === 4) cor = '#EAB308';
                     }
-
                     if (tipo === 4) hp = 2;
-
                     aliens.push({
-                        x: 50 + c * 60,
-                        y: 35 + r * 35,
-                        width: 9 * pixelSize,
-                        height: 6 * pixelSize,
-                        tipo: tipo,
-                        color: cor,
-                        hp: hp,
-                        alive: true,
+                        x: 50 + c * 60, y: 35 + r * 35, width: 9 * pixelSize, height: 6 * pixelSize,
+                        tipo: tipo, color: cor, hp: hp, alive: true,
                         speedX: (Math.random() * 1.2 + 0.4) * (Math.random() < 0.5 ? 1 : -1),
-                        speedY: Math.random() * 0.15 + 0.08,
-                        angle: Math.random() * Math.PI,
+                        speedY: Math.random() * 0.15 + 0.08, angle: Math.random() * Math.PI,
                         isShootingGroup: (level === 2 && tipo === 2) || (level === 3 && tipo === 3) || (level >= 4 && tipo >= 3)
                     });
                 }
             }
-
             notificationText = `LEVEL ${level}`;
             notificationTimer = 90;
         }
 
         function startGame() {
             if (animationId) cancelAnimationFrame(animationId);
-            score = 0; 
-            lives = 3; 
-            level = 1;
-            scoreEl.textContent = score;
-            livesEl.textContent = lives;
-            levelEl.textContent = level;
-            bullets = []; 
-            enemyBullets = []; 
-            particles = [];
-            player.x = canvas.width / 2 - 16;
-            player.y = canvas.height - 40;
-            player.dx = 0;
-            player.dy = 0;
-            player.invincibleTimer = 0;
+            isDemoMode = false;
+            score = 0; lives = 3; level = 1;
+            scoreEl.textContent = score; livesEl.textContent = lives; levelEl.textContent = level;
+            bullets = []; enemyBullets = []; particles = [];
+            player.x = canvas.width / 2 - 16; player.y = canvas.height - 40;
+            player.dx = 0; player.dy = 0; player.invincibleTimer = 0;
             criarOndaAlienigena();
             
-            // Esconde todas as telas do overlay e mostra o jogo
             overlay.classList.add('hidden');
-            mainMenu.classList.remove('flex');
-            mainMenu.classList.add('hidden');
-            endGameScreen.classList.remove('flex');
-            endGameScreen.classList.add('hidden');
+            mainMenu.classList.remove('flex'); mainMenu.classList.add('hidden');
+            endGameScreen.classList.remove('flex'); endGameScreen.classList.add('hidden');
             
-            // Verifica exibição dos controles móveis
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
             if (isMobileDevice && showTouchControlsSetting) {
                 mobileControls.classList.remove('hidden');
@@ -339,6 +304,7 @@
         }
 
         function gameOver(won) {
+            if (isDemoMode) return; // Na demo o jogo apenas reinicia a onda se acabar
             isPlaying = false;
             cancelAnimationFrame(animationId);
             mobileControls.classList.add('hidden');
@@ -352,19 +318,20 @@
             endGameScreen.classList.remove('hidden');
             endGameScreen.classList.add('flex');
             overlay.classList.remove('hidden');
-
-            // Retorna o loop rodando no fundo da tela de Game Over
-            isPlaying = true;
-            loop();
         }
 
         function loop() {
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (isPlaying) {
+            // Se estiver no modo demonstração (menu inicial), a nave se move sozinha e atira de vez em quando
+            if (isDemoMode) {
+                player.x += Math.sin(Date.now() / 400) * 2;
+                if (Math.random() < 0.03 && bullets.length < 3) {
+                    bullets.push({ x: player.x + player.width / 2 - 1.5, y: player.y });
+                }
+            } else {
                 if (player.invincibleTimer > 0) player.invincibleTimer--;
-
                 player.x += player.dx;
                 player.y += player.dy;
 
@@ -379,16 +346,12 @@
             }
 
             particles.forEach((p, index) => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= p.decay;
+                p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
                 if (p.alpha <= 0) {
                     particles.splice(index, 1);
                 } else {
-                    ctx.fillStyle = p.color;
-                    ctx.globalAlpha = p.alpha;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    ctx.globalAlpha = 1.0;
+                    ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha;
+                    ctx.fillRect(p.x, p.y, p.size, p.size); ctx.globalAlpha = 1.0;
                 }
             });
 
@@ -404,10 +367,9 @@
                 ctx.fillStyle = '#EC4899';
                 ctx.fillRect(eb.x, eb.y, 3, 8);
 
-                if (isPlaying && player.invincibleTimer === 0 && eb.x > player.x && eb.x < player.x + player.width && eb.y > player.y && eb.y < player.y + player.height) {
+                if (!isDemoMode && player.invincibleTimer === 0 && eb.x > player.x && eb.x < player.x + player.width && eb.y > player.y && eb.y < player.y + player.height) {
                     enemyBullets.splice(index, 1);
-                    lives--;
-                    livesEl.textContent = lives;
+                    lives--; livesEl.textContent = lives;
                     player.invincibleTimer = 60;
                     criarExplosao(player.x + player.width/2, player.y + player.height/2, '#3B82F6');
                     if (lives <= 0) gameOver(false);
@@ -416,7 +378,6 @@
             });
 
             let aliveCount = 0;
-
             for (let i = 0; i < aliens.length; i++) {
                 let a = aliens[i];
                 if (!a.alive) continue;
@@ -429,8 +390,7 @@
                     let distBoxY = Math.abs((a.y + a.height/2) - (other.y + other.height/2));
                     if (distBoxX < a.width && distBoxY < a.height) {
                         let pushDir = a.x < other.x ? -0.4 : 0.4;
-                        a.x += pushDir;
-                        other.x -= pushDir;
+                        a.x += pushDir; other.x -= pushDir;
                     }
                 }
 
@@ -447,3 +407,75 @@
                     }
                 } else {
                     let dx = player.x - a.x;
+                    if (Math.abs(dx) > 2) a.x += Math.sign(dx) * 0.6;
+                }
+
+                let currentArt = alienArt1;
+                if (a.tipo === 2) currentArt = alienArt2;
+                if (a.tipo === 3) currentArt = alienArt3;
+                if (a.tipo === 4) currentArt = alienArt4;
+
+                drawPixelArt(currentArt, a.x, a.y, a.color);
+
+                bullets.forEach((b, bi) => {
+                    if (b.x > a.x && b.x < a.x + a.width && b.y > a.y && b.y < a.y + a.height) {
+                        a.hp--; bullets.splice(bi, 1);
+                        if (a.hp <= 0) {
+                            a.alive = false;
+                            if (!isDemoMode) {
+                                score += (a.tipo * 30);
+                                scoreEl.textContent = score;
+                            }
+                            criarExplosao(a.x + a.width/2, a.y + a.height/2, a.color);
+                        }
+                    }
+                });
+            }
+
+            if (aliveCount === 0) {
+                if (isDemoMode) {
+                    criarOndaAlienigena(); // Na demo, se limpar os bots, a onda reinicia sozinha
+                } else {
+                    level++; levelEl.textContent = level;
+                    criarOndaAlienigena();
+                }
+            }
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        function dispararTiro() {
+            if (!isDemoMode && isPlaying && bullets.length < 4) {
+                bullets.push({ x: player.x + player.width / 2 - 1.5, y: player.y });
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if (isDemoMode || !isPlaying) return;
+            if (e.key === 'ArrowLeft') player.dx = -5;
+            if (e.key === 'ArrowRight') player.dx = 5;
+            if (e.key === 'ArrowUp') player.dy = -4;
+            if (e.key === 'ArrowDown') player.dy = 4;
+            if (e.code === 'Space') { e.preventDefault(); dispararTiro(); }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (isDemoMode) return;
+            if (e.key === 'ArrowLeft' && player.dx < 0) player.dx = 0;
+            if (e.key === 'ArrowRight' && player.dx > 0) player.dx = 0;
+            if (e.key === 'ArrowUp' && player.dy < 0) player.dy = 0;
+            if (e.key === 'ArrowDown' && player.dy > 0) player.dy = 0;
+        });
+
+        const triggerStart = (e) => { e.preventDefault(); startGame(); };
+        startBtn.addEventListener('click', triggerStart);
+        startBtn.addEventListener('touchstart', triggerStart, { passive: false });
+        restartBtn.addEventListener('click', triggerStart);
+        restartBtn.addEventListener('touchstart', triggerStart, { passive: false });
+
+        // Inicializa o jogo rodando sozinho no fundo (Modo Demo)
+        criarOndaAlienigena();
+        animationId = requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
