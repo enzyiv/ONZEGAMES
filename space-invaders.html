@@ -29,7 +29,7 @@
     <!-- Área Principal -->
     <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-2 relative">
         
-        <!-- Placar Flutuante (Aparece apenas jogando) -->
+        <!-- Placar Flutuante -->
         <div id="gameHUD" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl hidden items-center gap-6 text-xs sm:text-sm pointer-events-none">
             <div class="font-bold text-indigo-400">
                 Fase <span id="currentPhaseHUD" class="text-yellow-400">1</span>
@@ -60,7 +60,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Trilha de Fases (Novo!) -->
+                <!-- 2. Trilha de Fases -->
                 <div id="stageSelectMenu" class="hidden flex-col items-center w-full max-w-md bg-gray-950/95 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h3 class="text-2xl font-extrabold mb-1 text-center text-indigo-400"><i class="fa-solid fa-map mr-2"></i>Trilha de Fases</h3>
                     <p class="text-xs text-gray-400 mb-5 text-center">Selecione uma fase desbloqueada para jogar.</p>
@@ -94,7 +94,7 @@
                     </button>
                 </div>
 
-                <!-- 4. Tela de Vitória / Fim de Fase / Game Over -->
+                <!-- 4. Tela de Vitória / Game Over -->
                 <div id="endGameScreen" class="hidden flex-col items-center w-full max-w-xs text-center bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold mb-3 tracking-wide">Game Over!</h2>
                     <p id="overlayText" class="text-xs sm:text-sm text-gray-300 mb-6">Pontuação final: 0</p>
@@ -174,9 +174,8 @@
         let showTouchControlsSetting = true;
         const pixelSize = 3;
 
-        // Sistema de Progresso na Trilha (Salva no navegador)
         let maxUnlockedLevel = parseInt(localStorage.getItem('space_invaders_unlocked') || '1');
-        const totalLevels = 6; // Total de fases na trilha
+        const totalLevels = 6;
 
         function renderStageMap() {
             stagesGrid.innerHTML = '';
@@ -199,7 +198,6 @@
             }
         }
 
-        // Navegação de Menus
         startBtn.addEventListener('click', () => {
             mainMenu.classList.add('hidden');
             renderStageMap();
@@ -229,7 +227,6 @@
             showTouchControlsSetting = e.target.checked;
         });
 
-        // Pixel Arts
         const alienArt1 = [[0,0,1,0,0,0,0,1,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,0,1,1,0,1,1,0],[1,1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,1,0,1]];
         const alienArt2 = [[0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,0,0],[0,1,0,1,1,1,0,1,0],[1,1,1,1,1,1,1,1,1],[1,0,1,0,0,0,1,0,1]];
         const alienArt3 = [[0,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,0,1],[1,1,1,0,0,0,1,1,1],[0,1,0,1,1,1,0,1,0]];
@@ -323,7 +320,6 @@
             mobileControls.classList.add('hidden'); mobileControls.classList.remove('flex');
             gameHUD.classList.add('hidden'); gameHUD.classList.remove('flex');
 
-            // Desbloqueia próxima fase se for o caso
             if (currentLevel >= maxUnlockedLevel && currentLevel < totalLevels) {
                 maxUnlockedLevel = currentLevel + 1;
                 localStorage.setItem('space_invaders_unlocked', maxUnlockedLevel);
@@ -332,7 +328,6 @@
             const isLastLevel = currentLevel === totalLevels;
             overlayTitle.textContent = isLastLevel ? "Parabéns! Vitória Final!" : `Fase ${currentLevel} Concluída!`;
             overlayText.textContent = `Pontuação: ${score} | ${isLastLevel ? 'Você zerou a trilha!' : 'Próxima fase desbloqueada!'}`;
-            
             restartBtn.textContent = isLastLevel ? "Jogar Novamente" : "Avançar Próxima Fase";
             
             mainMenu.classList.add('hidden');
@@ -362,7 +357,6 @@
             overlay.classList.remove('hidden');
         }
 
-        // Botões da Tela de Game Over / Vitória
         restartBtn.addEventListener('click', () => {
             const isLastLevel = currentLevel === totalLevels;
             if (overlayTitle.textContent.includes("Vitória Final")) {
@@ -491,13 +485,32 @@
                         }
                     }
                 });
+
+                // NOVO: Se o inimigo passar do limite de baixo da tela (ou encostar no player), tira vida!
+                let hitPlayer = (!isDemoMode && (
+                    (a.x < player.x + player.width && a.x + a.width > player.x && a.y < player.y + player.height && a.y + a.height > player.y) ||
+                    (a.y + a.height >= canvas.height - 10)
+                ));
+
+                if (hitPlayer) {
+                    if (a.alive) {
+                        a.alive = false;
+                        criarExplosao(a.x + a.width/2, a.y + a.height/2, a.color);
+                    }
+                    if (player.invincibleTimer === 0) {
+                        lives--; livesEl.textContent = lives;
+                        player.invincibleTimer = 60;
+                        criarExplosao(player.x + player.width/2, player.y + player.height/2, '#3B82F6');
+                        if (lives <= 0) gameOver(false);
+                    }
+                }
             }
 
             if (aliveCount === 0) {
                 if (isDemoMode) {
                     criarOndaAlienigena();
                 } else {
-                    winStage(); // Passou de fase! Abre o menu de vitória e destrava a próxima
+                    winStage();
                     return;
                 }
             }
@@ -556,7 +569,6 @@
             dispararTiro();
         });
 
-        // Inicializa a demonstração rodando no fundo
         criarOndaAlienigena();
         animationId = requestAnimationFrame(loop);
     </script>
