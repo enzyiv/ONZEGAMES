@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Space Invaders - Fases Avançadas</title>
+    <title>Space Invaders - Trilha de Fases</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
@@ -26,15 +26,14 @@
         </div>
     </header>
 
-    <!-- Área do Jogo -->
+    <!-- Área Principal -->
     <main class="flex-1 w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-2 relative">
         
-        <!-- Placar Flutuante -->
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl flex items-center gap-6 text-xs sm:text-sm pointer-events-none">
+        <!-- Placar Flutuante (Aparece apenas jogando) -->
+        <div id="gameHUD" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-2xl border border-gray-800 shadow-xl hidden items-center gap-6 text-xs sm:text-sm pointer-events-none">
             <div class="font-bold text-indigo-400">
-                <span class="hidden sm:inline">Space</span> Invaders
+                Fase <span id="currentPhaseHUD" class="text-yellow-400">1</span>
             </div>
-            <div>Level: <span id="level" class="text-yellow-400 font-bold">1</span></div>
             <div>Pontos: <span id="score" class="text-indigo-400 font-bold">0</span></div>
             <div>Vidas: <span id="lives" class="text-red-400 font-bold">3</span></div>
         </div>
@@ -43,10 +42,10 @@
         <div class="relative w-full flex-1 flex items-center justify-center my-auto">
             <canvas id="gameCanvas" width="600" height="460" class="bg-black rounded-2xl shadow-2xl border border-gray-800 max-w-full max-h-[60vh] sm:max-h-[70vh] object-contain"></canvas>
             
-            <!-- Tela Inicial e Overlays do Jogo (Fundo semi-transparente para ver a gameplay rolando atrás) -->
-            <div id="gameOverlay" class="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center z-30 rounded-2xl p-6">
+            <!-- Overlay Geral (Menus) -->
+            <div id="gameOverlay" class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex flex-col items-center justify-center z-30 rounded-2xl p-6">
                 
-                <!-- Conteúdo do Menu Principal -->
+                <!-- 1. Menu Principal -->
                 <div id="mainMenu" class="flex flex-col items-center w-full max-w-xs bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h2 class="text-3xl font-extrabold mb-2 tracking-wide text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Space Invaders</h2>
                     <p class="text-xs sm:text-sm text-gray-300 mb-6 text-center font-medium">Proteja a galáxia dos invasores alienígenas.</p>
@@ -61,7 +60,21 @@
                     </div>
                 </div>
 
-                <!-- Conteúdo do Menu de Opções -->
+                <!-- 2. Trilha de Fases (Novo!) -->
+                <div id="stageSelectMenu" class="hidden flex-col items-center w-full max-w-md bg-gray-950/95 p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                    <h3 class="text-2xl font-extrabold mb-1 text-center text-indigo-400"><i class="fa-solid fa-map mr-2"></i>Trilha de Fases</h3>
+                    <p class="text-xs text-gray-400 mb-5 text-center">Selecione uma fase desbloqueada para jogar.</p>
+                    
+                    <div id="stagesGrid" class="grid grid-cols-3 gap-3 w-full mb-6">
+                        <!-- Gerado dinamicamente via JS -->
+                    </div>
+
+                    <button id="backToMainFromStages" class="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all cursor-pointer">
+                        Voltar ao Menu
+                    </button>
+                </div>
+
+                <!-- 3. Menu de Opções -->
                 <div id="optionsMenu" class="hidden flex-col items-center w-full max-w-xs bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h3 class="text-xl font-bold mb-6 text-center text-indigo-400"><i class="fa-solid fa-gear mr-2"></i>Opções</h3>
                     
@@ -81,13 +94,18 @@
                     </button>
                 </div>
 
-                <!-- Conteúdo de Game Over / Vitória -->
+                <!-- 4. Tela de Vitória / Fim de Fase / Game Over -->
                 <div id="endGameScreen" class="hidden flex-col items-center w-full max-w-xs text-center bg-gray-950/90 p-6 rounded-2xl border border-gray-800 shadow-2xl">
                     <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold mb-3 tracking-wide">Game Over!</h2>
                     <p id="overlayText" class="text-xs sm:text-sm text-gray-300 mb-6">Pontuação final: 0</p>
-                    <button id="restartBtn" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xl transition-all cursor-pointer">
-                        Jogar Novamente
-                    </button>
+                    <div class="flex flex-col gap-3 w-full">
+                        <button id="restartBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xl transition-all cursor-pointer">
+                            Tentar Novamente
+                        </button>
+                        <button id="backToMapBtn" class="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all cursor-pointer">
+                            Voltar à Trilha
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -131,9 +149,13 @@
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
         const livesEl = document.getElementById('lives');
-        const levelEl = document.getElementById('level');
+        const currentPhaseHUD = document.getElementById('currentPhaseHUD');
+        const gameHUD = document.getElementById('gameHUD');
+        
         const overlay = document.getElementById('gameOverlay');
         const mainMenu = document.getElementById('mainMenu');
+        const stageSelectMenu = document.getElementById('stageSelectMenu');
+        const stagesGrid = document.getElementById('stagesGrid');
         const optionsMenu = document.getElementById('optionsMenu');
         const endGameScreen = document.getElementById('endGameScreen');
         const overlayTitle = document.getElementById('overlayTitle');
@@ -142,13 +164,54 @@
         const startBtn = document.getElementById('startBtn');
         const optionsBtn = document.getElementById('optionsBtn');
         const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const backToMainFromStages = document.getElementById('backToMainFromStages');
         const restartBtn = document.getElementById('restartBtn');
+        const backToMapBtn = document.getElementById('backToMapBtn');
         const mobileControls = document.getElementById('mobileControls');
 
-        let score = 0, lives = 3, level = 1, isPlaying = false, animationId = null;
-        let isDemoMode = true; // Flag para indicar que o jogo está rodando sozinho no fundo
+        let score = 0, lives = 3, currentLevel = 1, isPlaying = false, animationId = null;
+        let isDemoMode = true; 
         let showTouchControlsSetting = true;
         const pixelSize = 3;
+
+        // Sistema de Progresso na Trilha (Salva no navegador)
+        let maxUnlockedLevel = parseInt(localStorage.getItem('space_invaders_unlocked') || '1');
+        const totalLevels = 6; // Total de fases na trilha
+
+        function renderStageMap() {
+            stagesGrid.innerHTML = '';
+            for (let i = 1; i <= totalLevels; i++) {
+                const isUnlocked = i <= maxUnlockedLevel;
+                const btn = document.createElement('button');
+                btn.className = `py-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    isUnlocked 
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shadow-lg shadow-indigo-600/20' 
+                        : 'bg-gray-900/50 text-gray-600 border border-gray-800 cursor-not-allowed'
+                }`;
+                
+                if (isUnlocked) {
+                    btn.innerHTML = `<i class="fa-solid fa-flag text-sm"></i> <span>Fase ${i}</span>`;
+                    btn.addEventListener('click', () => startStage(i));
+                } else {
+                    btn.innerHTML = `<i class="fa-solid fa-lock text-sm"></i> <span>Fase ${i}</span>`;
+                }
+                stagesGrid.appendChild(btn);
+            }
+        }
+
+        // Navegação de Menus
+        startBtn.addEventListener('click', () => {
+            mainMenu.classList.add('hidden');
+            renderStageMap();
+            stageSelectMenu.classList.remove('hidden');
+            stageSelectMenu.classList.add('flex');
+        });
+
+        backToMainFromStages.addEventListener('click', () => {
+            stageSelectMenu.classList.add('hidden');
+            stageSelectMenu.classList.remove('flex');
+            mainMenu.classList.remove('hidden');
+        });
 
         optionsBtn.addEventListener('click', () => {
             mainMenu.classList.add('hidden');
@@ -166,47 +229,12 @@
             showTouchControlsSetting = e.target.checked;
         });
 
-        const alienArt1 = [
-            [0,0,1,0,0,0,0,1,0,0],
-            [0,0,0,1,0,0,1,0,0,0],
-            [0,0,1,1,1,1,1,1,0,0],
-            [0,1,1,0,1,1,0,1,1,0],
-            [1,1,1,1,1,1,1,1,1,1],
-            [1,0,1,1,1,1,1,1,0,1]
-        ];
-
-        const alienArt2 = [
-            [0,0,0,1,1,1,0,0,0],
-            [0,0,1,1,1,1,1,0,0],
-            [0,1,0,1,1,1,0,1,0],
-            [1,1,1,1,1,1,1,1,1],
-            [1,0,1,0,0,0,1,0,1]
-        ];
-
-        const alienArt3 = [
-            [0,1,1,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1],
-            [1,0,1,1,1,1,1,0,1],
-            [1,1,1,0,0,0,1,1,1],
-            [0,1,0,1,1,1,0,1,0]
-        ];
-
-        const alienArt4 = [
-            [1,1,0,0,1,1,0,0,1,1],
-            [0,1,1,1,1,1,1,1,1,0],
-            [0,0,1,1,1,1,1,1,0,0],
-            [0,1,1,0,0,0,0,1,1,0],
-            [1,1,0,0,0,0,0,0,1,1]
-        ];
-
-        const playerArt = [
-            [0,0,0,0,0,1,0,0,0,0,0],
-            [0,0,0,0,1,1,1,0,0,0,0],
-            [0,0,0,0,1,1,1,0,0,0,0],
-            [0,1,1,1,1,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1]
-        ];
+        // Pixel Arts
+        const alienArt1 = [[0,0,1,0,0,0,0,1,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,0,1,1,0,1,1,0],[1,1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,1,0,1]];
+        const alienArt2 = [[0,0,0,1,1,1,0,0,0],[0,0,1,1,1,1,1,0,0],[0,1,0,1,1,1,0,1,0],[1,1,1,1,1,1,1,1,1],[1,0,1,0,0,0,1,0,1]];
+        const alienArt3 = [[0,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,0,1],[1,1,1,0,0,0,1,1,1],[0,1,0,1,1,1,0,1,0]];
+        const alienArt4 = [[1,1,0,0,1,1,0,0,1,1],[0,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,0,0,0,0,1,1,0],[1,1,0,0,0,0,0,0,1,1]];
+        const playerArt = [[0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,0,0,0,0],[0,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1]];
 
         function drawPixelArt(matrix, startX, startY, color) {
             ctx.fillStyle = color;
@@ -219,44 +247,29 @@
             });
         }
 
-        let player = { 
-            x: canvas.width / 2 - 16, 
-            y: canvas.height - 40, 
-            width: 11 * pixelSize, 
-            height: 6 * pixelSize, 
-            dx: 0, 
-            dy: 0,
-            invincibleTimer: 0
-        };
-
+        let player = { x: canvas.width / 2 - 16, y: canvas.height - 40, width: 11 * pixelSize, height: 6 * pixelSize, dx: 0, dy: 0, invincibleTimer: 0 };
         let bullets = [], enemyBullets = [], aliens = [], particles = [];
-        let notificationText = "";
-        let notificationTimer = 0;
+        let notificationText = "", notificationTimer = 0;
 
         function criarExplosao(x, y, color) {
             for (let i = 0; i < 16; i++) {
                 particles.push({
-                    x: x + Math.random() * 20 - 10,
-                    y: y + Math.random() * 20 - 10,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    size: Math.random() * 3 + 2,
-                    color: color,
-                    alpha: 1.0,
-                    decay: Math.random() * 0.03 + 0.02
+                    x: x + Math.random() * 20 - 10, y: y + Math.random() * 20 - 10,
+                    vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
+                    size: Math.random() * 3 + 2, color: color, alpha: 1.0, decay: Math.random() * 0.03 + 0.02
                 });
             }
         }
 
         function criarOndaAlienigena() {
             aliens = [];
-            let rows = 3 + Math.min(level, 2);
+            let rows = 2 + Math.min(currentLevel, 3);
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < 8; c++) {
                     let tipo = 1, cor = '#22C55E', hp = 1;
-                    if (level === 2) { tipo = r === 0 ? 2 : 1; cor = tipo === 2 ? '#A855F7' : '#22C55E'; }
-                    else if (level === 3) { tipo = r === 0 ? 3 : (r === 1 ? 2 : 1); cor = tipo === 3 ? '#F97316' : (tipo === 2 ? '#A855F7' : '#22C55E'); }
-                    else if (level >= 4) {
+                    if (currentLevel === 2) { tipo = r === 0 ? 2 : 1; cor = tipo === 2 ? '#A855F7' : '#22C55E'; }
+                    else if (currentLevel === 3) { tipo = r === 0 ? 3 : (r === 1 ? 2 : 1); cor = tipo === 3 ? '#F97316' : (tipo === 2 ? '#A855F7' : '#22C55E'); }
+                    else if (currentLevel >= 4) {
                         let tiposDisponiveis = [1, 2, 3, 4];
                         tipo = tiposDisponiveis[r % tiposDisponiveis.length];
                         if (tipo === 1) cor = '#22C55E'; if (tipo === 2) cor = '#A855F7';
@@ -268,27 +281,28 @@
                         tipo: tipo, color: cor, hp: hp, alive: true,
                         speedX: (Math.random() * 1.2 + 0.4) * (Math.random() < 0.5 ? 1 : -1),
                         speedY: Math.random() * 0.15 + 0.08, angle: Math.random() * Math.PI,
-                        isShootingGroup: (level === 2 && tipo === 2) || (level === 3 && tipo === 3) || (level >= 4 && tipo >= 3)
+                        isShootingGroup: (currentLevel === 2 && tipo === 2) || (currentLevel === 3 && tipo === 3) || (currentLevel >= 4 && tipo >= 3)
                     });
                 }
             }
-            notificationText = `LEVEL ${level}`;
+            notificationText = `FASE ${currentLevel}`;
             notificationTimer = 90;
         }
 
-        function startGame() {
+        function startStage(levelNum) {
             if (animationId) cancelAnimationFrame(animationId);
             isDemoMode = false;
-            score = 0; lives = 3; level = 1;
-            scoreEl.textContent = score; livesEl.textContent = lives; levelEl.textContent = level;
+            currentLevel = levelNum;
+            score = 0; lives = 3;
+            scoreEl.textContent = score; livesEl.textContent = lives; currentPhaseHUD.textContent = currentLevel;
             bullets = []; enemyBullets = []; particles = [];
             player.x = canvas.width / 2 - 16; player.y = canvas.height - 40;
             player.dx = 0; player.dy = 0; player.invincibleTimer = 0;
             criarOndaAlienigena();
             
             overlay.classList.add('hidden');
-            mainMenu.classList.remove('flex'); mainMenu.classList.add('hidden');
-            endGameScreen.classList.remove('flex'); endGameScreen.classList.add('hidden');
+            stageSelectMenu.classList.remove('flex'); stageSelectMenu.classList.add('hidden');
+            gameHUD.classList.remove('hidden'); gameHUD.classList.add('flex');
             
             const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
             if (isMobileDevice && showTouchControlsSetting) {
@@ -303,28 +317,75 @@
             loop();
         }
 
-        function gameOver(won) {
-            if (isDemoMode) return; // Na demo o jogo apenas reinicia a onda se acabar
+        function winStage() {
             isPlaying = false;
             cancelAnimationFrame(animationId);
-            mobileControls.classList.add('hidden');
-            mobileControls.classList.remove('flex');
+            mobileControls.classList.add('hidden'); mobileControls.classList.remove('flex');
+            gameHUD.classList.add('hidden'); gameHUD.classList.remove('flex');
 
-            overlayTitle.textContent = won ? "Parabéns! Vitória Absoluta!" : "Game Over!";
-            overlayText.textContent = `Pontuação final: ${score} | Nível: ${level}`;
+            // Desbloqueia próxima fase se for o caso
+            if (currentLevel >= maxUnlockedLevel && currentLevel < totalLevels) {
+                maxUnlockedLevel = currentLevel + 1;
+                localStorage.setItem('space_invaders_unlocked', maxUnlockedLevel);
+            }
+
+            const isLastLevel = currentLevel === totalLevels;
+            overlayTitle.textContent = isLastLevel ? "Parabéns! Vitória Final!" : `Fase ${currentLevel} Concluída!`;
+            overlayText.textContent = `Pontuação: ${score} | ${isLastLevel ? 'Você zerou a trilha!' : 'Próxima fase desbloqueada!'}`;
+            
+            restartBtn.textContent = isLastLevel ? "Jogar Novamente" : "Avançar Próxima Fase";
             
             mainMenu.classList.add('hidden');
+            stageSelectMenu.classList.add('hidden');
             optionsMenu.classList.add('hidden');
             endGameScreen.classList.remove('hidden');
             endGameScreen.classList.add('flex');
             overlay.classList.remove('hidden');
         }
 
+        function gameOver(won) {
+            if (isDemoMode) return;
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            mobileControls.classList.add('hidden'); mobileControls.classList.remove('flex');
+            gameHUD.classList.add('hidden'); gameHUD.classList.remove('flex');
+
+            overlayTitle.textContent = "Game Over!";
+            overlayText.textContent = `Você foi derrotado na Fase ${currentLevel}. Pontos: ${score}`;
+            restartBtn.textContent = "Tentar Novamente";
+            
+            mainMenu.classList.add('hidden');
+            stageSelectMenu.classList.add('hidden');
+            optionsMenu.classList.add('hidden');
+            endGameScreen.classList.remove('hidden');
+            endGameScreen.classList.add('flex');
+            overlay.classList.remove('hidden');
+        }
+
+        // Botões da Tela de Game Over / Vitória
+        restartBtn.addEventListener('click', () => {
+            const isLastLevel = currentLevel === totalLevels;
+            if (overlayTitle.textContent.includes("Vitória Final")) {
+                startStage(1);
+            } else if (restartBtn.textContent.includes("Avançar")) {
+                startStage(currentLevel + 1);
+            } else {
+                startStage(currentLevel);
+            }
+        });
+
+        backToMapBtn.addEventListener('click', () => {
+            endGameScreen.classList.add('hidden');
+            endGameScreen.classList.remove('flex');
+            renderStageMap();
+            stageSelectMenu.classList.remove('hidden');
+            stageSelectMenu.classList.add('flex');
+        });
+
         function loop() {
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Se estiver no modo demonstração (menu inicial), a nave se move sozinha e atira de vez em quando
             if (isDemoMode) {
                 player.x += Math.sin(Date.now() / 400) * 2;
                 if (Math.random() < 0.03 && bullets.length < 3) {
@@ -396,7 +457,7 @@
 
                 a.angle += 0.03;
                 a.x += a.speedX + Math.sin(a.angle) * 0.4;
-                a.y += a.speedY + (level * 0.03);
+                a.y += a.speedY + (currentLevel * 0.03);
 
                 if (a.x <= 10) { a.x = 10; a.speedX *= -1; } 
                 else if (a.x + a.width >= canvas.width - 10) { a.x = canvas.width - 10 - a.width; a.speedX *= -1; }
@@ -434,11 +495,21 @@
 
             if (aliveCount === 0) {
                 if (isDemoMode) {
-                    criarOndaAlienigena(); // Na demo, se limpar os bots, a onda reinicia sozinha
-                } else {
-                    level++; levelEl.textContent = level;
                     criarOndaAlienigena();
+                } else {
+                    winStage(); // Passou de fase! Abre o menu de vitória e destrava a próxima
+                    return;
                 }
+            }
+
+            if (notificationTimer > 0) {
+                notificationTimer--;
+                ctx.save();
+                ctx.font = "bold 32px sans-serif";
+                ctx.fillStyle = "rgba(234, 179, 8, " + (notificationTimer / 90) + ")";
+                ctx.textAlign = "center";
+                ctx.fillText(notificationText, canvas.width / 2, canvas.height / 2);
+                ctx.restore();
             }
 
             animationId = requestAnimationFrame(loop);
@@ -467,13 +538,25 @@
             if (e.key === 'ArrowDown' && player.dy > 0) player.dy = 0;
         });
 
-        const triggerStart = (e) => { e.preventDefault(); startGame(); };
-        startBtn.addEventListener('click', triggerStart);
-        startBtn.addEventListener('touchstart', triggerStart, { passive: false });
-        restartBtn.addEventListener('click', triggerStart);
-        restartBtn.addEventListener('touchstart', triggerStart, { passive: false });
+        function setupPointerButton(id, onDown, onUp) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('pointerdown', (e) => { e.preventDefault(); onDown(); });
+            el.addEventListener('pointerup', (e) => { e.preventDefault(); onUp(); });
+            el.addEventListener('pointerleave', (e) => { e.preventDefault(); onUp(); });
+        }
 
-        // Inicializa o jogo rodando sozinho no fundo (Modo Demo)
+        setupPointerButton('btnLeft', () => player.dx = -5, () => { if(player.dx < 0) player.dx = 0; });
+        setupPointerButton('btnRight', () => player.dx = 5, () => { if(player.dx > 0) player.dx = 0; });
+        setupPointerButton('btnUp', () => player.dy = -4, () => { if(player.dy < 0) player.dy = 0; });
+        setupPointerButton('btnDown', () => player.dy = 4, () => { if(player.dy > 0) player.dy = 0; });
+
+        document.getElementById('btnShoot').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            dispararTiro();
+        });
+
+        // Inicializa a demonstração rodando no fundo
         criarOndaAlienigena();
         animationId = requestAnimationFrame(loop);
     </script>
