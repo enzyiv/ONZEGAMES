@@ -2,14 +2,17 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tetris - Meu Site</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { touch-action: manipulation; }
+    </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col font-sans transition-colors duration-200 overflow-x-hidden">
 
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -25,30 +28,73 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 w-full text-center">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-lg">
+    <main class="flex-1 max-w-lg w-full mx-auto px-4 py-4 flex flex-col items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 w-full text-center relative overflow-hidden">
+            
+            <!-- Barra Superior (Placar e Recorde) -->
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-base">
                     <i class="fa-solid fa-shapes"></i> Tetris
                 </div>
-                <div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    Pontos: <span id="score">0</span>
+                <div class="flex gap-2">
+                    <div class="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-xl text-xs font-semibold text-gray-800 dark:text-gray-100">
+                        Recorde: <span id="highScore">0</span>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-900/40 px-3 py-1 rounded-xl text-xs font-semibold text-purple-700 dark:text-purple-300">
+                        Pontos: <span id="score">0</span>
+                    </div>
                 </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">Use as **setas Esquerda/Direita** para mover, **Baixo** para acelerar e **Cima** para girar!</p>
-            
+
+            <!-- Área do Jogo / Canvas -->
             <div class="relative w-full flex justify-center bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
                 <canvas id="gameCanvas" width="200" height="400" class="bg-black rounded-xl max-w-full h-auto shadow-md"></canvas>
-                <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white">
-                    <h2 class="text-2xl font-bold mb-2">Tetris Clássico</h2>
-                    <p class="text-sm text-gray-300 mb-6">Encaixe os blocos e faça linhas!</p>
-                    <button id="startBtn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 font-medium rounded-xl shadow-lg transition-all">Iniciar Jogo</button>
+                
+                <!-- Menu Inicial Principal -->
+                <div id="mainMenuOverlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white p-4 text-center z-20 transition-all">
+                    <div class="w-16 h-16 bg-purple-600/20 rounded-2xl flex items-center justify-center text-purple-400 text-3xl mb-3 shadow-inner">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold mb-1 text-purple-400">TETRIS</h2>
+                    <p class="text-xs text-gray-300 mb-6 max-w-xs">Encaixe os blocos, faça linhas e vença seus limites!</p>
+                    <div class="flex flex-col gap-3 w-48">
+                        <button id="playBtn" class="w-full py-3 bg-purple-600 hover:bg-purple-700 font-bold rounded-xl shadow-lg transition-all text-sm tracking-wide">JOGAR</button>
+                        <button id="optionsBtn" class="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold rounded-xl border border-gray-700 transition-all text-sm tracking-wide">OPÇÕES</button>
+                    </div>
+                </div>
+
+                <!-- Modal de Opções -->
+                <div id="optionsModal" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white p-6 text-center z-30 hidden transition-all">
+                    <h3 class="text-2xl font-bold mb-3 text-purple-400">Opções</h3>
+                    <p class="text-xs text-gray-300 mb-6">Em breve novas configurações por aqui! (Ex: Dificuldade, Efeitos Sonoros, etc.)</p>
+                    <button id="closeOptionsBtn" class="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 font-bold rounded-xl text-sm transition-all">Voltar</button>
+                </div>
+
+                <!-- Tela de Game Over -->
+                <div id="gameOverOverlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white p-4 text-center z-10 hidden transition-all">
+                    <h2 class="text-3xl font-extrabold mb-2 text-red-500">GAME OVER</h2>
+                    <p id="finalScoreDesc" class="text-sm text-gray-300 mb-6">Sua pontuação foi: 0</p>
+                    <div class="flex flex-col gap-3 w-48">
+                        <button id="restartBtn" class="w-full py-3 bg-purple-600 hover:bg-purple-700 font-bold rounded-xl shadow-lg transition-all text-sm">JOGAR NOVAMENTE</button>
+                        <button id="menuBtn" class="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold rounded-xl border border-gray-700 transition-all text-sm">MENU INICIAL</button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Controles Mobile / Tablets -->
+            <div id="mobileControls" class="grid grid-cols-4 gap-2 mt-4 hidden">
+                <button id="btnLeft" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-3 rounded-xl font-bold text-lg active:scale-95 transition-transform"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="btnRotate" class="bg-purple-100 dark:bg-purple-900/50 hover:bg-purple-200 text-purple-700 dark:text-purple-300 py-3 rounded-xl font-bold text-lg active:scale-95 transition-transform"><i class="fa-solid fa-rotate"></i></button>
+                <button id="btnRight" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-3 rounded-xl font-bold text-lg active:scale-95 transition-transform"><i class="fa-solid fa-arrow-right"></i></button>
+                <button id="btnDrop" class="bg-red-100 dark:bg-red-900/40 hover:bg-red-200 text-red-600 dark:text-red-300 py-3 rounded-xl font-bold text-lg active:scale-95 transition-transform"><i class="fa-solid fa-arrow-down"></i></button>
+            </div>
+
+            <p class="text-gray-500 dark:text-gray-400 text-xs mt-3 hidden sm:block">Use as setas do teclado para jogar (Cima para girar).</p>
         </div>
     </main>
 
     <script>
+        // Tema Claro/Escuro
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIcon = document.getElementById('themeIcon');
         const htmlElement = document.documentElement;
@@ -59,24 +105,44 @@
             themeIcon.classList.toggle('fa-sun'); themeIcon.classList.toggle('fa-moon');
         });
 
+        // Elementos da UI
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
-        const overlay = document.getElementById('gameOverlay');
-        const startBtn = document.getElementById('startBtn');
+        const highScoreEl = document.getElementById('highScore');
+        
+        const mainMenuOverlay = document.getElementById('mainMenuOverlay');
+        const optionsModal = document.getElementById('optionsModal');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const finalScoreDesc = document.getElementById('finalScoreDesc');
+        const mobileControls = document.getElementById('mobileControls');
+
+        const playBtn = document.getElementById('playBtn');
+        const optionsBtn = document.getElementById('optionsBtn');
+        const closeOptionsBtn = document.getElementById('closeOptionsBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const menuBtn = document.getElementById('menuBtn');
 
         const ROWS = 20, COLS = 10, BLOCK_SIZE = 20;
         let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-        let score = 0, isPlaying = false, dropInterval = 500, lastTime = 0;
+        let score = 0;
+        let highScore = localStorage.getItem('tetrisHighScore') || 0;
+        highScoreEl.textContent = highScore;
+
+        let isPlaying = false;
+        let isDemoMode = true; // Inicia rodando sozinho no fundo do menu principal
+        let dropInterval = 500, lastTime = 0;
 
         const SHAPES = [
             [[1,1,1,1]], // I
             [[1,1],[1,1]], // O
             [[0,1,0],[1,1,1]], // T
             [[1,0],[1,0],[1,1]], // L
-            [[0,1],[0,1],[1,1]]  // J
+            [[0,1],[0,1],[1,1]], // J
+            [[0,1,1],[1,1,0]], // S
+            [[1,1,0],[0,1,1]]  // Z
         ];
-        const COLORS = ['', '#06B6D4', '#EAB308', '#A855F7', '#F97316', '#3B82F6'];
+        const COLORS = ['', '#06B6D4', '#EAB308', '#A855F7', '#F97316', '#3B82F6', '#10B981', '#EF4444'];
 
         let piece = { shape: SHAPES[0], color: 1, x: 3, y: 0 };
 
@@ -84,13 +150,26 @@
             let rand = Math.floor(Math.random() * SHAPES.length);
             piece.shape = SHAPES[rand];
             piece.color = rand + 1;
-            piece.x = 3; piece.y = 0;
+            piece.x = Math.floor(COLS / 2) - Math.floor(piece.shape[0].length / 2);
+            piece.y = 0;
+
             if (checkCollision(0, 0, piece.shape)) {
-                isPlaying = false;
-                overlay.querySelector('h2').textContent = "Game Over!";
-                overlay.querySelector('p').textContent = `Pontuação: ${score}`;
-                startBtn.textContent = "Jogar Novamente";
-                overlay.classList.remove('hidden');
+                if (isDemoMode) {
+                    board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+                } else {
+                    // Fim de Jogo real
+                    isPlaying = false;
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('tetrisHighScore', highScore);
+                        highScoreEl.textContent = highScore;
+                    }
+                    finalScoreDesc.textContent = `Sua pontuação foi: ${score}`;
+                    mobileControls.classList.add('hidden');
+                    gameOverOverlay.classList.remove('hidden');
+                    isDemoMode = true;
+                    spawnPiece();
+                }
             }
         }
 
@@ -123,22 +202,59 @@
                 return true;
             });
             while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
-            if (lines > 0) { score += lines * 100; scoreEl.textContent = score; }
+            
+            if (lines > 0 && !isDemoMode) {
+                const pointsTable = [0, 100, 300, 500, 800];
+                score += pointsTable[lines] || (lines * 100);
+                scoreEl.textContent = score;
+            }
+        }
+
+        function demoAI() {
+            if (!isDemoMode) return;
+            if (Math.random() < 0.1) {
+                let rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
+                if (!checkCollision(0, 0, rotated)) piece.shape = rotated;
+            }
+            let targetX = Math.floor(Math.random() * (COLS - piece.shape[0].length));
+            if (piece.x < targetX && !checkCollision(1, 0, piece.shape)) piece.x++;
+            else if (piece.x > targetX && !checkCollision(-1, 0, piece.shape)) piece.x--;
         }
 
         function startGame() {
             board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-            score = 0; scoreEl.textContent = score;
-            spawnPiece();
-            overlay.classList.add('hidden');
+            score = 0;
+            scoreEl.textContent = score;
+            isDemoMode = false;
             isPlaying = true;
+            
+            mainMenuOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden');
+            optionsModal.classList.add('hidden');
+            mobileControls.classList.remove('hidden');
+            
+            spawnPiece();
             lastTime = performance.now();
-            requestAnimationFrame(loop);
+        }
+
+        function returnToMenu() {
+            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            score = 0;
+            scoreEl.textContent = score;
+            isDemoMode = true;
+            isPlaying = false;
+
+            gameOverOverlay.classList.add('hidden');
+            optionsModal.classList.add('hidden');
+            mobileControls.classList.add('hidden');
+            mainMenuOverlay.classList.remove('hidden');
+            spawnPiece();
         }
 
         function loop(time = 0) {
-            if (!isPlaying) return;
-            if (time - lastTime > dropInterval) {
+            if (time - lastTime > (isDemoMode ? 100 : dropInterval)) {
+                if (isDemoMode) demoAI();
+
                 if (!checkCollision(0, 1, piece.shape)) {
                     piece.y++;
                 } else {
@@ -149,9 +265,9 @@
                 lastTime = time;
             }
 
-            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Desenhar Tabuleiro
             board.forEach((row, r) => {
                 row.forEach((val, c) => {
                     if (val) {
@@ -161,7 +277,6 @@
                 });
             });
 
-            // Desenhar Peça Ativa
             piece.shape.forEach((row, r) => {
                 row.forEach((val, c) => {
                     if (val) {
@@ -174,8 +289,9 @@
             requestAnimationFrame(loop);
         }
 
+        // Eventos de Teclado
         window.addEventListener('keydown', e => {
-            if (!isPlaying) return;
+            if (isDemoMode || !isPlaying) return;
             if (e.key === 'ArrowLeft' && !checkCollision(-1, 0, piece.shape)) piece.x--;
             if (e.key === 'ArrowRight' && !checkCollision(1, 0, piece.shape)) piece.x++;
             if (e.key === 'ArrowDown' && !checkCollision(0, 1, piece.shape)) piece.y++;
@@ -185,7 +301,32 @@
             }
         });
 
-        startBtn.addEventListener('click', startGame);
+        // Controles Mobile Touch
+        document.getElementById('btnLeft').addEventListener('click', () => { if(isPlaying && !isDemoMode && !checkCollision(-1, 0, piece.shape)) piece.x--; });
+        document.getElementById('btnRight').addEventListener('click', () => { if(isPlaying && !isDemoMode && !checkCollision(1, 0, piece.shape)) piece.x++; });
+        document.getElementById('btnDrop').addEventListener('click', () => { 
+            if(isPlaying && !isDemoMode) {
+                while (!checkCollision(0, 1, piece.shape)) { piece.y++; }
+                mergePiece(); clearLines(); spawnPiece();
+            }
+        });
+        document.getElementById('btnRotate').addEventListener('click', () => {
+            if(isPlaying && !isDemoMode) {
+                let rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
+                if (!checkCollision(0, 0, rotated)) piece.shape = rotated;
+            }
+        });
+
+        // Ações dos Botões do Menu
+        playBtn.addEventListener('click', startGame);
+        optionsBtn.addEventListener('click', () => { optionsModal.classList.remove('hidden'); });
+        closeOptionsBtn.addEventListener('click', () => { optionsModal.classList.add('hidden'); });
+        restartBtn.addEventListener('click', startGame);
+        menuBtn.addEventListener('click', returnToMenu);
+
+        // Inicializa com o Tetris rodando no fundo da tela de menu
+        spawnPiece();
+        requestAnimationFrame(loop);
     </script>
 </body>
 </html>
