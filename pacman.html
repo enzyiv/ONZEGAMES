@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Os fantasmas ficam presos na base por 3 segundos antes de liberados!</p>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Use as **setas do teclado** para controlar o Pac-Man sem que a página se mova!</p>
             
             <!-- Área do Jogo -->
             <div class="relative w-full flex justify-center bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 p-2">
@@ -81,12 +81,6 @@
 
         const TILE_SIZE = 20;
 
-        // Legenda do Mapa:
-        // 1 = Parede azul
-        // 0 = Ponto normal
-        // 2 = Chão livre
-        // 3 = Power Pellet (Pílula grande)
-        // 4 = Bloco transparente temporário (Porta dos fantasmas por 3 segundos)
         const mapTemplate = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             [1,3,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,3,1],
@@ -96,7 +90,7 @@
             [1,2,1,1,2,1,2,1,1,1,1,1,1,1,1,2,1,2,1,1,2,1],
             [1,2,2,2,2,1,2,2,2,2,1,1,2,2,2,2,1,2,2,2,2,1],
             [1,1,1,1,2,1,1,1,2,2,2,2,2,2,1,1,1,2,1,1,1,1],
-            [2,2,2,1,2,1,2,2,2,2,4,4,2,2,2,2,1,2,1,2,2,2], // <-- O 4 representa a porta transparente no meio
+            [2,2,2,1,2,1,2,2,2,2,4,4,2,2,2,2,1,2,1,2,2,2],
             [1,1,1,1,2,1,2,1,1,1,2,2,1,1,1,2,1,2,1,1,1,1],
             [2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2],
             [1,1,1,1,2,1,2,1,1,1,1,1,1,1,1,2,1,2,1,1,1,1],
@@ -115,7 +109,7 @@
         let map = [];
         let score = 0, lives = 3, level = 1, isPlaying = false;
         let frightenTimer = 0;
-        let ghostReleaseTimer = 180; // 180 frames = 3 segundos a 60fps
+        let ghostReleaseTimer = 180;
 
         let pacman = {
             x: 10 * TILE_SIZE + TILE_SIZE/2,
@@ -154,7 +148,7 @@
                 g.dy = -1.5;
             });
             frightenTimer = 0;
-            ghostReleaseTimer = 180; // Reinicia a contagem de 3 segundos
+            ghostReleaseTimer = 180;
         }
 
         function startGame() {
@@ -179,12 +173,11 @@
             loop();
         }
 
-        // Se o timer estiver ativo, o bloco 4 conta como parede. Depois de 3s, vira caminho livre (2).
         function isWall(r, c) {
             if (r < 0 || r >= map.length || c < 0 || c >= map[0].length) return true;
             let tile = map[r][c];
             if (tile === 1) return true;
-            if (tile === 4 && ghostReleaseTimer > 0) return true; // Porta fechada por 3 segundos
+            if (tile === 4 && ghostReleaseTimer > 0) return true;
             return false;
         }
 
@@ -214,26 +207,30 @@
             if (frightenTimer > 0) frightenTimer--;
             if (ghostReleaseTimer > 0) ghostReleaseTimer--;
 
-            // --- 1. MOVIMENTAÇÃO DO PAC-MAN ---
+            // --- 1. MOVIMENTAÇÃO DO PAC-MAN COM BUFFER DE DIREÇÃO ---
             let atCenterTile = (Math.abs(pacman.x % TILE_SIZE - TILE_SIZE/2) <= pacman.speed) &&
                                (Math.abs(pacman.y % TILE_SIZE - TILE_SIZE/2) <= pacman.speed);
 
-            if (atCenterTile && (pacman.nextDx !== 0 || pacman.nextDy !== 0)) {
-                let targetX = Math.floor(pacman.x / TILE_SIZE) * TILE_SIZE + TILE_SIZE/2;
-                let targetY = Math.floor(pacman.y / TILE_SIZE) * TILE_SIZE + TILE_SIZE/2;
-                if (isWalkable(targetX + pacman.nextDx * 2, targetY + pacman.nextDy * 2, pacman.radius)) {
-                    pacman.dx = pacman.nextDx;
-                    pacman.dy = pacman.nextDy;
+            if (atCenterTile) {
+                // Se o jogador pressionou uma nova direção, tenta aplicá-la imediatamente se houver caminho
+                if (pacman.nextDx !== 0 || pacman.nextDy !== 0) {
+                    let testX = Math.floor(pacman.x / TILE_SIZE) * TILE_SIZE + TILE_SIZE/2 + pacman.nextDx * 2;
+                    let testY = Math.floor(pacman.y / TILE_SIZE) * TILE_SIZE + TILE_SIZE/2 + pacman.nextDy * 2;
+                    if (isWalkable(testX, testY, pacman.radius)) {
+                        pacman.dx = pacman.nextDx;
+                        pacman.dy = pacman.nextDy;
+                    }
                 }
             }
 
-            if (isWalkable(pacman.x + pacman.dx, pacman.y + pacman.dy, pacman.radius)) {
-                pacman.x += pacman.dx;
-                pacman.y += pacman.dy;
-            } else {
+            // Se a direção atual bater em parede, trava
+            if (!isWalkable(pacman.x + pacman.dx, pacman.y + pacman.dy, pacman.radius)) {
                 pacman.dx = 0;
                 pacman.dy = 0;
             }
+
+            pacman.x += pacman.dx;
+            pacman.y += pacman.dy;
 
             if (pacman.x < 0) pacman.x = canvas.width;
             if (pacman.x > canvas.width) pacman.x = 0;
@@ -251,13 +248,11 @@
                     let posY = r * TILE_SIZE;
 
                     if (map[r][c] === 1) {
-                        // Paredes Azules
                         ctx.fillStyle = '#1e3a8a';
                         ctx.fillRect(posX, posY, TILE_SIZE, TILE_SIZE);
                         ctx.strokeStyle = '#3b82f6';
                         ctx.strokeRect(posX, posY, TILE_SIZE, TILE_SIZE);
                     } else if (map[r][c] === 4) {
-                        // Desenha a porta transparente (fica rosa clara/branca enquanto trancada, some depois)
                         if (ghostReleaseTimer > 0) {
                             ctx.fillStyle = 'rgba(236, 72, 153, 0.4)';
                             ctx.fillRect(posX, posY, TILE_SIZE, TILE_SIZE / 2);
@@ -305,7 +300,7 @@
             ctx.lineTo(pacman.x, pacman.y);
             ctx.fill();
 
-            // --- 4. ATUALIZAR E DESENHAR FANTASMAS ---
+            // --- 4. ATUALIZAR E DESENHAR FANTASMAS (FLUIDEZ CORRIGIDA) ---
             ghosts.forEach(g => {
                 let gAtCenter = (Math.abs(g.x % TILE_SIZE - TILE_SIZE/2) <= g.speed) &&
                                 (Math.abs(g.y % TILE_SIZE - TILE_SIZE/2) <= g.speed);
@@ -315,7 +310,17 @@
                         {dx: g.speed, dy: 0}, {dx: -g.speed, dy: 0},
                         {dx: 0, dy: g.speed}, {dx: 0, dy: -g.speed}
                     ];
-                    let validDirs = dirs.filter(d => isWalkable(g.x + d.dx * 3, g.y + d.dy * 3, 8));
+                    // Evitar que voltem para trás imediatamente, exceto se não houver opção
+                    let validDirs = dirs.filter(d => {
+                        // Impedir retorno 180° estrito a menos que necessário
+                        if (d.dx === -g.dx && d.dy === -g.dy) return false;
+                        return isWalkable(g.x + d.dx * 4, g.y + d.dy * 4, 8);
+                    });
+
+                    if (validDirs.length === 0) {
+                        validDirs = dirs.filter(d => isWalkable(g.x + d.dx * 4, g.y + d.dy * 4, 8));
+                    }
+
                     if (validDirs.length > 0) {
                         let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
                         g.dx = chosen.dx;
@@ -331,7 +336,6 @@
                     g.y += g.dy;
                 }
 
-                // Desenhar Fantasma Pixel Art
                 let gx = Math.round(g.x - TILE_SIZE/2);
                 let gy = Math.round(g.y - TILE_SIZE/2);
                 let ghostColor = frightenTimer > 0 ? (frightenTimer < 100 && Math.floor(Date.now() / 150) % 2 === 0 ? '#FFFFFF' : '#1D4ED8') : g.color;
@@ -347,7 +351,6 @@
                 ctx.closePath();
                 ctx.fill();
 
-                // Olhinhos
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(gx + 5, gy + 7, 4, 6);
                 ctx.fillRect(gx + 11, gy + 7, 4, 6);
@@ -355,7 +358,6 @@
                 ctx.fillRect(gx + 6, gy + 9, 2, 3);
                 ctx.fillRect(gx + 12, gy + 9, 2, 3);
 
-                // Colisão Fantasma <-> Pac-Man
                 if (Math.hypot(pacman.x - g.x, pacman.y - g.y) < 14) {
                     if (frightenTimer > 0) {
                         score += 200;
@@ -393,7 +395,11 @@
             }
         }
 
+        // BLOQUEIO DA ROLAGEM DA PÁGINA E REGISTRO DE BUFFER DO TECLADO
         window.addEventListener('keydown', e => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault(); // Impede que a tela suba ou desça
+            }
             if (e.key === 'ArrowUp') { pacman.nextDx = 0; pacman.nextDy = -pacman.speed; }
             if (e.key === 'ArrowDown') { pacman.nextDx = 0; pacman.nextDy = pacman.speed; }
             if (e.key === 'ArrowLeft') { pacman.nextDx = -pacman.speed; pacman.nextDy = 0; }
